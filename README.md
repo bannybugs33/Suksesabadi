@@ -1,58 +1,194 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Toko Sukses Abadi (Toko Tempo)
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Sistem pencatatan keuangan, monitoring arus kas, serta manajemen utang dan piutang berbasis web. Aplikasi ini dirancang khusus untuk memantau jatuh tempo tagihan pelanggan dan kewajiban supplier secara akurat dan real-time, lengkap dengan riwayat pembayaran bertahap dan pengelolaan bukti kuitansi.
 
-## About Laravel
+---
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Fitur Utama
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### 1. Dashboard Operasional
+- Ringkasan arus kas, total piutang aktif pelanggan, dan total utang toko kepada supplier.
+- Widget pengingat jatuh tempo terpusat yang mengelompokkan tagihan mendesak (terlambat, jatuh tempo hari ini, dan jatuh tempo besok / H-1).
+- Daftar transaksi terkini dengan kalkulasi saldo dan status pembayaran berjalan.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 2. Manajemen Utang & Piutang (Jatuh Tempo)
+- **Pengingat Jatuh Tempo Real-Time**: Status tagihan dihitung otomatis berdasarkan tanggal acuan sistem, mencakup kategori *Terlambat*, *Hari Ini*, *H-1 (Besok)*, *H-2*, dan *H-3*.
+- **Penyaringan Data Lengkap**: Filter transaksi berdasarkan rentang waktu tempo, jenis kewajiban (`Utang` / `Piutang`), status pembayaran (`Belum Lunas`, `DP`, `Cicilan`), dan pencarian teks nama pihak atau nomor kuitansi.
+- **Panel Rincian Transaksi Interaktif**: Tampilan detail transaksi kuitansi dapat dibuka langsung tanpa perlu memuat ulang seluruh halaman (interaksi berbasis komponen client-side).
+- **Pengelolaan Bukti Kuitansi Dinamis**:
+  - Mendukung resolusi berkas bukti dari Laravel Storage (`public`), folder aset publik (`images/`), maupun tautan eksternal.
+  - Menampilkan nama berkas asli, ekstensi, dan kalkulasi ukuran berkas aktual dari penyimpanan disk.
+  - Tampilan penampung (*empty-state*) informatif dan bersih apabila transaksi belum memiliki lampiran berkas fisik.
+  - Tombol pratinjau (*lihat bukti*) dan unduhan (*download*) langsung tertaut ke sumber berkas.
+- **Riwayat Pembayaran Terperinci**: Pencatatan riwayat pembayaran bertahap (uang muka/DP, cicilan berkala, pelunasan), metode pembayaran (tunai atau transfer bank), tanggal pencatatan, dan operator/kasir yang mencatat.
 
-## Learning Laravel
+### 3. Rekapitulasi Keuangan
+- Laporan berkala berdasarkan filter periode bulan dan tahun.
+- Analisis akumulasi nominal transaksi, total terbayar, dan sisa saldo kewajiban per kategori.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 4. Autentikasi Pengguna
+- Pembatasan akses berbasis sesi login untuk keamanan data operasional toko.
+- Pengelolaan multi-akun kasir/administrator toko.
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+## Teknologi yang Digunakan
 
-## Agentic Development
+- **Backend**: PHP 8.4, Laravel Framework 12/13
+- **Database**: SQLite (default pada lingkungan lokal) / kompatibel dengan MySQL dan PostgreSQL
+- **Frontend**: Laravel Blade, Vanilla JavaScript (DOM manipulation tanpa full page refresh), CSS kustom terstruktur
+- **Peralatan Uji & Standar Kode**: PHPUnit 12, Laravel Pint (PSR-12 code style)
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+---
 
+## Persyaratan Sistem
+
+- PHP >= 8.3 (disarankan PHP 8.4)
+- Ekstensi PHP: `pdo_sqlite` (atau `pdo_mysql`), `mbstring`, `openssl`, `tokenizer`, `xml`, `ctype`, `json`, `fileinfo`
+- Composer >= 2.x
+- Node.js >= 18.x dan NPM
+
+---
+
+## Panduan Instalasi
+
+### 1. Salin Repositori dan Masuk ke Direktori Proyek
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone <url-repositori>
+cd Suksesabadi
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### 2. Pasang Dependensi Backend (Composer)
+```bash
+composer install
+```
 
-## Contributing
+### 3. Konfigurasi Lingkungan (`.env`)
+Salin file konfigurasi contoh dan buat application key:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Secara default, aplikasi menggunakan SQLite. Buat berkas database lokal jika belum tersedia:
+```bash
+touch database/database.sqlite
+```
 
-## Code of Conduct
+> **Catatan**: Jika menggunakan MySQL, sesuaikan baris `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD` pada file `.env`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 4. Jalankan Migrasi dan Seeder Database
+Inisialisasi tabel dan data awal operasional toko:
+```bash
+php artisan migrate --seed
+```
 
-## Security Vulnerabilities
+### 5. Hubungkan Direktori Penyimpanan Publik
+Wajib dijalankan agar berkas bukti kuitansi yang diunggah ke storage dapat diakses via web:
+```bash
+php artisan storage:link
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 6. Pasang Dependensi Frontend dan Build Aset
+```bash
+npm install
+npm run build
+```
 
-## License
+Untuk proses pengembangan dengan *hot-reload*:
+```bash
+npm run dev
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+### 7. Jalankan Server Pengembangan
+```bash
+php artisan serve
+```
+Akses aplikasi melalui browser di: `http://localhost:8000`
+
+---
+
+## Kredensial Akun Uji Coba
+
+Data awal (seeder) menyediakan beberapa akun pengguna bawaan:
+
+| Nama Pengguna | Alamat Email | Password | Peran |
+| :--- | :--- | :--- | :--- |
+| Andi Saputra | `andi@suksesabadi.com` | `password` | Kasir / Operator |
+| Safira Alifiya | `safira@suksesabadi.com` | `password` | Kasir / Operator |
+| Admin Sukses Abadi | `admin@suksesabadi.com` | `password` | Administrator |
+
+---
+
+## Struktur Entitas Data Utama
+
+1. **`users`**: Menyimpan identitas kasir dan pengelola toko untuk autentikasi.
+2. **`kuitansi`**: Menyimpan data induk transaksi tagihan:
+   - `nomor_kuitansi`: Nomor kuitansi unik (misal: `KWT-240918`).
+   - `nama_pihak`: Nama pihak rekanan (pelanggan atau supplier).
+   - `role_pihak`: Keterangan peran pihak (misal: *Pelanggan berutang kepada toko* atau *Supplier harus dibayar toko*).
+   - `jenis`: Jenis transaksi (`utang` atau `piutang`).
+   - `nominal_transaksi`: Total nilai transaksi awal.
+   - `status_pembayaran`: Status pembayaran (`belum_lunas`, `dp`, `cicilan`, `lunas`).
+   - `tanggal_kuitansi`: Tanggal transaksi dibuat.
+   - `tanggal_jatuh_tempo`: Batas waktu penyelesaian tagihan.
+   - `bukti_kuitansi`: Lokasi berkas fisik bukti kuitansi (bisa berupa path storage, public asset, atau URL).
+   - `keterangan`: Catatan deskripsi transaksi.
+3. **`pembayaran`**: Menyimpan riwayat pembayaran parsial/lunas yang terhubung ke kuitansi:
+   - `kuitansi_id`: Relasi ke tabel `kuitansi`.
+   - `nominal`: Besaran nominal pembayaran yang disetorkan.
+   - `tanggal_pembayaran`: Waktu transaksi pembayaran dilakukan.
+   - `metode_pembayaran`: Metode pembayaran (misal: `Transfer bank`, `Tunai`).
+   - `dicatat_oleh`: Nama operator yang menerima/mencatat transaksi.
+   - `catatan`: Keterangan tambahan transaksi pembayaran.
+
+---
+
+## Pengujian dan Standar Kode
+
+### Menjalankan Pengujian Otomatis (PHPUnit)
+Aplikasi dilengkapi pengujian fitur komprehensif yang mencakup alur autentikasi, kalkulasi metrik dashboard, penyaringan jatuh tempo, serta validasi berkas bukti kuitansi:
+```bash
+php artisan test --compact
+```
+
+### Memeriksa dan Memformat Gaya Kode (Laravel Pint)
+Proyek mengikuti standar gaya penulisan kode PHP Laravel:
+```bash
+vendor/bin/pint --format agent
+```
+
+---
+
+## Struktur Direktori Utama
+
+```
+Suksesabadi/
+├── app/
+│   ├── Http/Controllers/      # Controller (Dashboard, JatuhTempo, Rekapitulasi, Auth)
+│   └── Models/                # Model Eloquent (User, Kuitansi, Pembayaran)
+├── database/
+│   ├── migrations/            # Skema tabel database
+│   └── seeders/               # Data awal untuk pengujian dan demo
+├── public/
+│   ├── images/                # Aset gambar statis
+│   └── storage/               # Symlink ke storage/app/public untuk file upload
+├── resources/
+│   └── views/
+│       ├── auth/              # Tampilan halaman login
+│       ├── dashboard.blade.php# Tampilan ringkasan operasional toko
+│       ├── jatuh-tempo/       # Tampilan modul jatuh tempo & rincian bukti
+│       └── rekapitulasi/      # Tampilan modul rekapitulasi transaksi
+├── routes/
+│   └── web.php                # Rute aplikasi web
+├── storage/
+│   └── app/public/            # Penyimpanan dokumen dan bukti kuitansi
+└── tests/
+    └── Feature/               # Test suite PHPUnit untuk fitur aplikasi
+```
+
+---
+
+## Lisensi
+
+Proyek ini dikembangkan secara internal untuk operasional Toko Sukses Abadi.

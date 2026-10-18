@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Rekapitulasi BukuTempo</title>
     <style>
     * {
@@ -250,6 +253,29 @@
     color: #91283b;
 }
 
+.sidebar-logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    min-height: 34px;
+    margin-top: 14px;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    color: white;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.sidebar-logout-btn:hover {
+    background: rgba(0, 0, 0, 0.35);
+}
+
 .main-content {
     margin-left: 220px;
     padding: 36px;
@@ -454,6 +480,177 @@
     background: #fbe3e1;
     color: #af3833;
 }
+
+form {
+    background: #ffffff;
+    border: 1px solid #e6e7ec;
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px;
+}
+
+form label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #4b4d58;
+}
+
+form input[type="month"] {
+    padding: 8px 12px;
+    border: 1px solid #d8dbe2;
+    border-radius: 8px;
+    font-size: 13px;
+    background: #ffffff;
+    color: #1a1a24;
+    outline: none;
+    transition: all 0.15s ease;
+    cursor: pointer;
+    height: 40px;
+    box-sizing: border-box;
+}
+
+form input[type="month"]:focus {
+    border-color: #91283b;
+    box-shadow: 0 0 0 3px rgba(145, 40, 59, 0.12);
+}
+
+.custom-select-wrap {
+    position: relative;
+    user-select: none;
+}
+
+.custom-select-box {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    height: 40px;
+    padding: 0 14px;
+    border: 1px solid #d8dbe2;
+    border-radius: 8px;
+    font-size: 13px;
+    background: #ffffff;
+    color: #1a1a24;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    min-width: 165px;
+    box-sizing: border-box;
+}
+
+.custom-select-box:hover {
+    border-color: #b0b4be;
+    background: #fafafc;
+}
+
+.custom-select-wrap.is-open .custom-select-box {
+    border-color: #91283b;
+    box-shadow: 0 0 0 3px rgba(145, 40, 59, 0.12);
+}
+
+.dropdown-chevron {
+    color: #717381;
+    transition: transform 0.2s ease, color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.custom-select-wrap.is-open .dropdown-chevron {
+    transform: rotate(180deg);
+    color: #91283b;
+}
+
+.custom-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 100%;
+    width: max-content;
+    background: #ffffff;
+    border: 1px solid #e6e7ec;
+    border-radius: 12px;
+    box-shadow: 0 14px 34px -4px rgba(26, 26, 36, 0.14), 0 4px 12px -2px rgba(26, 26, 36, 0.05);
+    padding: 6px;
+    z-index: 100;
+    box-sizing: border-box;
+    animation: dropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.custom-select-wrap.is-open .custom-dropdown-menu {
+    display: block;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.custom-dropdown-item {
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #292930;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.12s ease;
+    white-space: nowrap;
+}
+
+.custom-dropdown-item:hover {
+    background: #fdf2f4;
+    color: #91283b;
+}
+
+.custom-dropdown-item.is-selected {
+    background: #fbf2f4;
+    color: #91283b;
+    font-weight: 600;
+}
+
+.dropdown-check {
+    color: #91283b;
+    flex-shrink: 0;
+}
+
+form button[type="submit"] {
+    padding: 8px 16px;
+    background: #91283b;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+form button[type="submit"]:hover {
+    background: #782032;
+}
+
+form a {
+    font-size: 13px;
+    color: #717381;
+    text-decoration: none;
+}
+
+form a:hover {
+    color: #91283b;
+    text-decoration: underline;
+}
 </style>
 </head>
 <body>
@@ -466,7 +663,7 @@
     <p class="menu-label">MENU UTAMA</p>
 
     <nav class="sidebar-menu" aria-label="Menu utama">
-        <span class="menu-disabled">Dashboard</span>
+        <a href="{{ route('dashboard') }}">Dashboard</a>
         <span class="menu-disabled">Arsip Kuitansi</span>
         <span class="menu-disabled">Kuitansi Baru</span>
 
@@ -480,12 +677,26 @@
     </nav>
 
     <div class="sidebar-user">
-        <div class="avatar">AS</div>
-        <div>
-            Andi Saputra
-            <small>Owner · Toko Sukses Abadi</small>
+        <div class="avatar">{{ strtoupper(substr(auth()->user()->name ?? 'AS', 0, 2)) }}</div>
+        <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                {{ auth()->user()->name ?? 'Andi Saputra' }}
+            </div>
+            <small style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ auth()->user()->email ?? 'Owner · Toko Sukses Abadi' }}</small>
         </div>
     </div>
+
+    <form method="POST" action="{{ route('logout') }}" style="margin: 0; padding: 0; background: none; border: none; box-shadow: none;">
+        @csrf
+        <button type="submit" class="sidebar-logout-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            Keluar (Logout)
+        </button>
+    </form>
 </aside>
 
 <main class="main-content">
@@ -507,34 +718,95 @@
         value="{{ request('periode') }}"
     >
 
-    <label for="jenis">Jenis:</label>
-    <select id="jenis" name="jenis">
-        <option value="">Utang & piutang</option>
-        <option value="utang" @selected(request('jenis') === 'utang')>
-            Utang
-        </option>
-        <option value="piutang" @selected(request('jenis') === 'piutang')>
-            Piutang
-        </option>
-    </select>
+    <label>Jenis:</label>
+    <div class="custom-select-wrap" onclick="toggleRekapDropdown(this, event)">
+        <input type="hidden" id="jenis" name="jenis" value="{{ request('jenis') }}">
+        <div class="custom-select-box">
+            <span class="custom-select-value">{{ request('jenis') === 'piutang' ? 'Piutang' : (request('jenis') === 'utang' ? 'Utang' : 'Utang & piutang') }}</span>
+            <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </div>
+        <div class="custom-dropdown-menu" onclick="event.stopPropagation()">
+            <div class="custom-dropdown-item {{ !request('jenis') ? 'is-selected' : '' }}" onclick="selectRekapOption(this, '', 'Utang & piutang', event)">
+                <span>Utang & piutang</span>
+                @if (!request('jenis'))
+                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                @endif
+            </div>
+            <div class="custom-dropdown-item {{ request('jenis') === 'utang' ? 'is-selected' : '' }}" onclick="selectRekapOption(this, 'utang', 'Utang', event)">
+                <span>Utang</span>
+                @if (request('jenis') === 'utang')
+                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                @endif
+            </div>
+            <div class="custom-dropdown-item {{ request('jenis') === 'piutang' ? 'is-selected' : '' }}" onclick="selectRekapOption(this, 'piutang', 'Piutang', event)">
+                <span>Piutang</span>
+                @if (request('jenis') === 'piutang')
+                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                @endif
+            </div>
+        </div>
+    </div>
 
-    <label for="status">Status:</label>
-    <select id="status" name="status">
-        <option value="">Semua status</option>
-        <option value="belum_lunas"
-            @selected(request('status') === 'belum_lunas')>
-            Belum lunas
-        </option>
-        <option value="dp" @selected(request('status') === 'dp')>
-            DP
-        </option>
-        <option value="cicilan" @selected(request('status') === 'cicilan')>
-            Cicilan
-        </option>
-        <option value="lunas" @selected(request('status') === 'lunas')>
-            Lunas
-        </option>
-    </select>
+    <label>Status:</label>
+    <div class="custom-select-wrap" onclick="toggleRekapDropdown(this, event)">
+        <input type="hidden" id="status" name="status" value="{{ request('status') }}">
+        <div class="custom-select-box">
+            <span class="custom-select-value">{{ request('status') === 'belum_lunas' ? 'Belum lunas' : (request('status') === 'dp' ? 'DP' : (request('status') === 'cicilan' ? 'Cicilan' : (request('status') === 'lunas' ? 'Lunas' : 'Semua status'))) }}</span>
+            <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        </div>
+        <div class="custom-dropdown-menu" onclick="event.stopPropagation()">
+            <div class="custom-dropdown-item {{ !request('status') ? 'is-selected' : '' }}" onclick="selectRekapOption(this, '', 'Semua status', event)">
+                <span>Semua status</span>
+                @if (!request('status'))
+                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                @endif
+            </div>
+            <div class="custom-dropdown-item {{ request('status') === 'belum_lunas' ? 'is-selected' : '' }}" onclick="selectRekapOption(this, 'belum_lunas', 'Belum lunas', event)">
+                <span>Belum lunas</span>
+                @if (request('status') === 'belum_lunas')
+                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                @endif
+            </div>
+            <div class="custom-dropdown-item {{ request('status') === 'dp' ? 'is-selected' : '' }}" onclick="selectRekapOption(this, 'dp', 'DP', event)">
+                <span>DP</span>
+                @if (request('status') === 'dp')
+                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                @endif
+            </div>
+            <div class="custom-dropdown-item {{ request('status') === 'cicilan' ? 'is-selected' : '' }}" onclick="selectRekapOption(this, 'cicilan', 'Cicilan', event)">
+                <span>Cicilan</span>
+                @if (request('status') === 'cicilan')
+                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                @endif
+            </div>
+            <div class="custom-dropdown-item {{ request('status') === 'lunas' ? 'is-selected' : '' }}" onclick="selectRekapOption(this, 'lunas', 'Lunas', event)">
+                <span>Lunas</span>
+                @if (request('status') === 'lunas')
+                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                @endif
+            </div>
+        </div>
+    </div>
 
     <button type="submit">Terapkan</button>
 
@@ -736,6 +1008,45 @@
 </tfoot>
     </table>
     </div>
-    </main>
+    <script>
+        function toggleRekapDropdown(el, e) {
+            if (e) e.stopPropagation();
+            const wasOpen = el.classList.contains('is-open');
+            document.querySelectorAll('.custom-select-wrap.is-open').forEach(item => item.classList.remove('is-open'));
+            if (!wasOpen) el.classList.add('is-open');
+        }
+
+        function selectRekapOption(itemEl, val, label, e) {
+            if (e) e.stopPropagation();
+            const wrap = itemEl.closest('.custom-select-wrap');
+            const input = wrap.querySelector('input[type="hidden"]');
+            const valSpan = wrap.querySelector('.custom-select-value');
+            input.value = val;
+            valSpan.textContent = label;
+            wrap.classList.remove('is-open');
+            wrap.querySelectorAll('.custom-dropdown-item').forEach(el => {
+                const isSelected = el === itemEl;
+                el.classList.toggle('is-selected', isSelected);
+                let check = el.querySelector('.dropdown-check');
+                if (isSelected && !check) {
+                    el.insertAdjacentHTML('beforeend', '<svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>');
+                } else if (!isSelected && check) {
+                    check.remove();
+                }
+            });
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select-wrap')) {
+                document.querySelectorAll('.custom-select-wrap.is-open').forEach(el => el.classList.remove('is-open'));
+            }
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.custom-select-wrap.is-open').forEach(el => el.classList.remove('is-open'));
+            }
+        });
+    </script>
 </body>
 </html>

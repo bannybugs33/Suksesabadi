@@ -1,0 +1,19 @@
+Cara pakai (PowerShell, dari folder proyek Laravel):
+
+1. Hapus 4 file migration bawaan hasil make:model (agar tidak dobel):
+   Remove-Item database\migrations\*_create_parties_table.php
+   Remove-Item database\migrations\*_create_receipts_table.php
+   Remove-Item database\migrations\*_create_payments_table.php
+   Remove-Item database\migrations\*_create_activities_table.php
+   (file 2026_01_01_00000x_... dari zip ini JANGAN dihapus)
+
+2. Ekstrak zip ke folder proyek (menimpa file lama):
+   Expand-Archive -Path .\bukutempo-files.zip -DestinationPath . -Force
+
+3. Edit manual: config\app.php -> 'timezone' => 'Asia/Jakarta'
+   Edit .env -> APP_LOCALE=id
+
+4. php artisan migrate:fresh --seed
+5. npm.cmd run dev   (terminal 1)  |  php artisan serve  (terminal 2)
+
+Login: andi.owner / password

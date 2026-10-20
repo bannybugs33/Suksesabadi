@@ -1853,6 +1853,9 @@
                                     <span>Total terbayar</span>
                                     <strong>Rp{{ number_format($selectedKuitansi->terbayar, 0, ',', '.') }}</strong>
                                 </div>
+                                <button type="button" class="btn-catat-bayar" onclick="openPaymentModal({{ $selectedKuitansi->id }})">
+    + Catat pembayaran
+</button>
                             </div>
                         </div>
 
@@ -1970,7 +1973,7 @@
             <span>Data per {{ $tanggalAcuan->translatedFormat('d M Y') }}, {{ now()->format('H.i') }}</span>
         </footer>
     </main>
-
+    @include('jatuh-tempo._modal-pembayaran')
     <script>
         const kuitansiData = @json($kuitansiClientData);
         let currentSelectedId = {{ $selectedKuitansi ? $selectedKuitansi->id : 'null' }};
@@ -2254,6 +2257,9 @@
                                     <span>Total terbayar</span>
                                     <strong>${item.total_terbayar_formatted}</strong>
                                 </div>
+                                <button type="button" class="btn-catat-bayar" onclick="openPaymentModal(${item.id})">
+    + Catat pembayaran
+</button>
                             </div>
                         </div>
 

@@ -145,6 +145,8 @@ class JatuhTempoController extends Controller
                 'nominal_transaksi_formatted' => 'Rp'.number_format($item->nominal_transaksi, 0, ',', '.'),
                 'terbayar_formatted' => 'Rp'.number_format($item->terbayar, 0, ',', '.'),
                 'sisa_formatted' => 'Rp'.number_format($item->sisa, 0, ',', '.'),
+                'sisa' => (float) $item->sisa,
+'pembayaran_url' => route('pembayaran.store', $item->id),
                 'keterangan' => $item->keterangan ?? 'Tidak ada catatan tambahan untuk kuitansi ini.',
                 'has_bukti' => $item->has_bukti,
                 'bukti_kuitansi' => $item->bukti_kuitansi,

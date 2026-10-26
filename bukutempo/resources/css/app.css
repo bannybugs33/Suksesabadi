@@ -1,0 +1,20 @@
+@import 'tailwindcss';
+
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+@source '../**/*.blade.php';
+@source '../**/*.js';
+
+@theme {
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+
+    --color-brand-50: #fdf0f1;
+    --color-brand-100: #fbe1e4;
+    --color-brand-200: #f5c4ca;
+    --color-brand-500: #c8374a;
+    --color-brand-600: #b02e40;
+    --color-brand-700: #8f2235;
+    --color-brand-800: #741b2b;
+
+    --color-ink: #26262b;
+    --color-ink-soft: #6b6b76;
+}

@@ -652,52 +652,10 @@ form a:hover {
     text-decoration: underline;
 }
 </style>
+@include('partials.sidebar-styles')
 </head>
 <body>
-    <aside class="sidebar">
-    <div class="brand">
-        BukuTempo
-        <small>CATAT · INGAT · LUNAS</small>
-    </div>
-
-    <p class="menu-label">MENU UTAMA</p>
-
-    <nav class="sidebar-menu" aria-label="Menu utama">
-        <a href="{{ route('dashboard') }}">Dashboard</a>
-        <span class="menu-disabled">Arsip Kuitansi</span>
-        <span class="menu-disabled">Kuitansi Baru</span>
-
-        <a
-            href="{{ route('rekapitulasi.index') }}"
-            class="menu-active"
-            aria-current="page"
-        >
-            Rekapitulasi
-        </a>
-    </nav>
-
-    <div class="sidebar-user">
-        <div class="avatar">{{ strtoupper(substr(auth()->user()->name ?? 'AS', 0, 2)) }}</div>
-        <div style="flex: 1; min-width: 0;">
-            <div style="font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                {{ auth()->user()->name ?? 'Andi Saputra' }}
-            </div>
-            <small style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ auth()->user()->email ?? 'Owner · Toko Sukses Abadi' }}</small>
-        </div>
-    </div>
-
-    <form method="POST" action="{{ route('logout') }}" style="margin: 0; padding: 0; background: none; border: none; box-shadow: none;">
-        @csrf
-        <button type="submit" class="sidebar-logout-btn">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            Keluar (Logout)
-        </button>
-    </form>
-</aside>
+    @include('arsip-kuitansi._sidebar')
 
 <main class="main-content">
     <h1>Rekapitulasi Utang dan Piutang</h1>

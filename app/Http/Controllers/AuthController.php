@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kuitansi;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,7 +18,11 @@ class AuthController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        return view('auth.login', [
+            // Hanya angka agregat toko (tanpa nama pihak) karena pengguna belum login.
+            'pengingat' => Kuitansi::ringkasanPengingat(),
+            'grafikPiutang' => Kuitansi::grafikPiutangBulanan(),
+        ]);
     }
 
     /**
@@ -32,7 +37,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $throttleKey = Str::transliterate(Str::lower($request->string('email')).'|'.$request->ip());
+        $throttleKey = Str::transliterate(Str::lower($request->string('email')) . '|' . $request->ip());
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
@@ -55,7 +60,9 @@ class AuthController extends Controller
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        // Dibaca sekali oleh dashboard untuk menampilkan notifikasi pengingat jatuh tempo.
+        return redirect()->intended(route('dashboard'))
+            ->with('pengingat_login', Kuitansi::ringkasanPengingat(Auth::id()));
     }
 
     /**

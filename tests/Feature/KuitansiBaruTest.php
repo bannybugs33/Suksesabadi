@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Kuitansi;
+use App\Models\Pembayaran;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -80,13 +81,15 @@ class KuitansiBaruTest extends TestCase
             'role_pihak' => 'Pelanggan',
             'nominal_transaksi' => 500000,
             'status_pembayaran' => 'belum_lunas',
-            'tanggal_kuitansi' => '2026-09-29',
-            'tanggal_jatuh_tempo' => '2026-10-13',
             'keterangan' => 'Minyak goreng 2 dus',
         ]);
 
         $kuitansi = Kuitansi::where('nama_pihak', 'Warung Bu Sari')->first();
         $this->assertNotNull($kuitansi);
+        // Tanggal dibandingkan lewat model (cast 'date'): di SQLite nilainya tersimpan
+        // sebagai '2026-09-29 00:00:00', di MySQL sebagai '2026-09-29'.
+        $this->assertSame('2026-09-29', $kuitansi->tanggal_kuitansi->toDateString());
+        $this->assertSame('2026-10-13', $kuitansi->tanggal_jatuh_tempo->toDateString());
         $this->assertStringStartsWith('KWT-260929', $kuitansi->nomor_kuitansi);
 
         $response->assertRedirect(route('arsip-kuitansi.show', $kuitansi->id));
@@ -116,8 +119,11 @@ class KuitansiBaruTest extends TestCase
         $this->assertDatabaseHas('pembayaran', [
             'kuitansi_id' => $kuitansi->id,
             'nominal' => 550000,
-            'tanggal_pembayaran' => '2026-09-29',
         ]);
+
+        $pembayaran = Pembayaran::where('kuitansi_id', $kuitansi->id)->first();
+        $this->assertNotNull($pembayaran);
+        $this->assertSame('2026-09-29', $pembayaran->tanggal_pembayaran->toDateString());
 
         $response->assertRedirect(route('arsip-kuitansi.show', $kuitansi->id));
     }

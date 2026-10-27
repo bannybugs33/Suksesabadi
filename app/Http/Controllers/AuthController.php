@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Kuitansi;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +19,18 @@ class AuthController extends Controller
      */
     public function create(): View
     {
-        return view('auth.login');
+        // Hanya angka agregat toko (tanpa nama pihak) karena pengunjung belum login.
+        // rescue(): jika perhitungan gagal (mis. database belum dimigrasi), halaman login tetap tampil.
+        return view('auth.login', [
+            'pengingat' => rescue(
+                fn () => Kuitansi::ringkasanPengingat(),
+                ['jumlah' => 0, 'terlambat' => 0, 'sisa' => 0.0]
+            ),
+            'grafikPiutang' => rescue(
+                fn () => Kuitansi::grafikPiutangBulanan(),
+                ['bars' => [], 'total' => 0.0, 'perubahan' => null]
+            ),
+        ]);
     }
 
     /**
@@ -54,11 +66,14 @@ class AuthController extends Controller
 
         $remember = $request->boolean('remember');
 
-        // Cari pengguna berdasarkan email, nama, atau username prefix
+        // Cari pengguna berdasarkan email, nama, atau username (bagian sebelum '@').
+        // Memakai LIKE ... ESCAPE (bukan SUBSTRING_INDEX yang hanya ada di MySQL) agar jalan di SQLite.
+        $escapedLogin = str_replace(['!', '%', '_'], ['!!', '!%', '!_'], (string) $loginInput);
+
         $user = User::query()
             ->where('email', $loginInput)
             ->orWhere('name', $loginInput)
-            ->orWhereRaw("SUBSTRING_INDEX(email, '@', 1) = ?", [$loginInput])
+            ->orWhereRaw("email LIKE ? ESCAPE '!'", [$escapedLogin.'@%'])
             ->when($loginInput === 'andi.owner', function ($q) {
                 $q->orWhere('email', 'andi@suksesabadi.com');
             })
@@ -84,7 +99,12 @@ class AuthController extends Controller
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('dashboard'));
+        // Dibaca sekali oleh dashboard untuk menampilkan notifikasi pengingat jatuh tempo.
+        return redirect()->intended(route('dashboard'))
+            ->with('pengingat_login', rescue(
+                fn () => Kuitansi::ringkasanPengingat(Auth::id()),
+                ['jumlah' => 0, 'terlambat' => 0, 'sisa' => 0.0]
+            ));
     }
 
     /**

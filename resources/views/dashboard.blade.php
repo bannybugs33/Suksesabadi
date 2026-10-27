@@ -580,7 +580,7 @@
         .chart-overlay-popup {
             position: absolute;
             top: 24px;
-            right: 48px;
+            left: 24px;
             width: 275px;
             background: #ffffff;
             border: 1px solid #e5e7eb;
@@ -634,9 +634,9 @@
             border-radius: 8px;
             padding: 10px 12px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            flex-direction: column;
+            align-items: stretch;
+            gap: 6px;
             margin-bottom: 12px;
         }
 
@@ -663,7 +663,7 @@
             font-size: 12px;
             font-weight: 700;
             color: #1a1a24;
-            white-space: nowrap;
+            white-space: normal;
         }
 
         .popup-item-meta {
@@ -679,6 +679,7 @@
             font-weight: 700;
             color: #dc2626;
             white-space: nowrap;
+            padding-left: 38px; /* sejajar dengan teks di sebelah ikon */
         }
 
         .btn-popup-action {
@@ -1080,6 +1081,58 @@
             color: #91283b;
             flex-shrink: 0;
         }
+        /* Toast pengingat jatuh tempo setelah login */
+        .toast-pengingat {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 60;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            max-width: 340px;
+            padding: 14px 16px;
+            background: #ffffff;
+            border: 1px solid #e6e7ec;
+            border-left: 4px solid #91283b;
+            border-radius: 10px;
+            box-shadow: 0 12px 28px rgba(32, 32, 48, 0.16);
+            animation: toastMasuk 0.3s ease;
+        }
+
+        .toast-pengingat-body strong {
+            display: block;
+            font-size: 13px;
+            color: #1a1a24;
+        }
+
+        .toast-pengingat-body p {
+            margin: 4px 0 8px;
+            font-size: 12px;
+            color: #555765;
+            line-height: 1.45;
+        }
+
+        .toast-pengingat-link {
+            font-size: 12px;
+            font-weight: 700;
+            color: #91283b;
+            text-decoration: none;
+        }
+
+        .toast-pengingat-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            line-height: 1;
+            color: #8b8e9c;
+            cursor: pointer;
+        }
+
+        @keyframes toastMasuk {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -1087,6 +1140,24 @@
 
     <!-- Main Content Area -->
     <main class="main-content">
+        @if (session('pengingat_login') && session('pengingat_login')['jumlah'] > 0)
+            @php($pengingatLogin = session('pengingat_login'))
+            <div class="toast-pengingat" id="toastPengingat" role="alert">
+                <div class="toast-pengingat-body">
+                    <strong>Pengingat jatuh tempo</strong>
+                    <p>
+                        {{ $pengingatLogin['jumlah'] }} kuitansi perlu perhatian
+                        @if ($pengingatLogin['terlambat'] > 0)
+                            ({{ $pengingatLogin['terlambat'] }} terlambat)
+                        @endif
+                        • Rp{{ number_format($pengingatLogin['sisa'], 0, ',', '.') }} belum diselesaikan.
+                    </p>
+                    <a href="{{ route('jatuh-tempo.index') }}" class="toast-pengingat-link">Lihat detail</a>
+                </div>
+                <button type="button" class="toast-pengingat-close" onclick="document.getElementById('toastPengingat').remove()" aria-label="Tutup pengingat">&times;</button>
+            </div>
+        @endif
+
         <!-- Dashboard Top Header -->
         <header class="dashboard-header">
             <div class="header-title-wrap">
@@ -1113,7 +1184,11 @@
                 </div>
                 <div>
                     <h2>Peringatan jatuh tempo</h2>
-                    <p>Pengingat aktif mulai H-3. Ada {{ $perluPerhatianCount }} utang dan piutang yang perlu perhatian hari ini.</p>
+                    @if ($perluPerhatianCount > 0)
+                        <p>Pengingat aktif mulai H-3. Ada {{ $perluPerhatianCount }} utang dan piutang yang perlu perhatian hari ini.</p>
+                    @else
+                        <p>Pengingat aktif mulai H-3. Belum ada utang atau piutang yang mendekati jatuh tempo.</p>
+                    @endif
                 </div>
             </div>
             <a href="{{ route('jatuh-tempo.index') }}" class="btn-lihat-detail">Lihat detail</a>
@@ -1211,14 +1286,15 @@
                     @foreach ($chartData as $c)
                         <div class="chart-month-col">
                             <div class="chart-bars-wrap">
-                                <div class="bar-item gray" style="height: {{ $c['piutang'] }}%;" title="Piutang {{ $c['bulan'] }}"></div>
-                                <div class="bar-item red" style="height: {{ $c['utang'] }}%;" title="Utang {{ $c['bulan'] }}"></div>
+                                <div class="bar-item gray" style="height: {{ $c['piutang'] }}%;" title="Piutang {{ $c['bulan'] }}: Rp{{ number_format($c['piutang_nominal'], 0, ',', '.') }}"></div>
+                                <div class="bar-item red" style="height: {{ $c['utang'] }}%;" title="Utang {{ $c['bulan'] }}: Rp{{ number_format($c['utang_nominal'], 0, ',', '.') }}"></div>
                             </div>
                             <span class="month-label">{{ $c['bulan'] }}</span>
                         </div>
                     @endforeach
 
-                    <!-- Floating Detail Pengingat Popup -->
+                    <!-- Floating Detail Pengingat Popup (hanya tampil jika ada kuitansi yang perlu perhatian) -->
+                    @if ($popupItem)
                     <div class="chart-overlay-popup" id="detailPengingatPopup">
                         <div class="popup-header">
                             <div>
@@ -1233,7 +1309,6 @@
                             </button>
                         </div>
 
-                        @if ($popupItem)
                             <div class="popup-item-box">
                                 <div class="popup-item-left">
                                     <div class="popup-item-icon">
@@ -1255,8 +1330,8 @@
                             <a href="{{ route('jatuh-tempo.index', ['selected' => $popupItem->id]) }}" class="btn-popup-action">
                                 Lihat detail
                             </a>
-                        @endif
                     </div>
+                    @endif
                 </div>
             </div>
 
@@ -1332,52 +1407,41 @@
                 </div>
 
                 <div class="aktivitas-list">
-                    <!-- Aktivitas 1 -->
-                    <div class="aktivitas-item">
-                        <div class="aktivitas-icon-box" style="background: #f3f4f6; color: #4b5563;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="9"></circle>
-                                <path d="M12 6v12M15 9.5H10.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H9"></path>
-                            </svg>
+                    @forelse ($aktivitasTerbaru as $aktivitas)
+                        <div class="aktivitas-item">
+                            <div class="aktivitas-icon-box" style="background: {{ $aktivitas['badge_bg'] }}; color: {{ $aktivitas['badge_color'] }};">
+                                @if ($aktivitas['type'] === 'cicilan')
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="9"></circle>
+                                        <path d="M12 6v12M15 9.5H10.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H9"></path>
+                                    </svg>
+                                @elseif ($aktivitas['type'] === 'kuitansi')
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                        <line x1="12" y1="18" x2="12" y2="12"></line>
+                                        <line x1="9" y1="15" x2="15" y2="15"></line>
+                                    </svg>
+                                @else
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                    </svg>
+                                @endif
+                            </div>
+                            <div class="aktivitas-content">
+                                <div class="aktivitas-title">{{ $aktivitas['title'] }}</div>
+                                <div class="aktivitas-meta">{{ $aktivitas['subtitle'] }}</div>
+                                <div class="aktivitas-time">{{ $aktivitas['time'] }}</div>
+                            </div>
                         </div>
-                        <div class="aktivitas-content">
-                            <div class="aktivitas-title">Pembayaran cicilan dicatat</div>
-                            <div class="aktivitas-meta">Warung Bu Sari • Rp2.000.000</div>
-                            <div class="aktivitas-time">Hari ini, 09.18</div>
+                    @empty
+                        <div class="aktivitas-item">
+                            <div class="aktivitas-content">
+                                <div class="aktivitas-meta">Belum ada aktivitas.</div>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Aktivitas 2 -->
-                    <div class="aktivitas-item">
-                        <div class="aktivitas-icon-box" style="background: #fef2f2; color: #ef4444;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                <polyline points="14 2 14 8 20 8"></polyline>
-                                <line x1="12" y1="18" x2="12" y2="12"></line>
-                                <line x1="9" y1="15" x2="15" y2="15"></line>
-                            </svg>
-                        </div>
-                        <div class="aktivitas-content">
-                            <div class="aktivitas-title">Kuitansi baru ditambahkan</div>
-                            <div class="aktivitas-meta">PT Sumber Pangan • Rp12.400.000</div>
-                            <div class="aktivitas-time">Kemarin, 16.42</div>
-                        </div>
-                    </div>
-
-                    <!-- Aktivitas 3 -->
-                    <div class="aktivitas-item">
-                        <div class="aktivitas-icon-box" style="background: #eff6ff; color: #3b82f6;">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                            </svg>
-                        </div>
-                        <div class="aktivitas-content">
-                            <div class="aktivitas-title">Kuitansi ditandai lunas</div>
-                            <div class="aktivitas-meta">CV Segar Abadi • Rp5.800.000</div>
-                            <div class="aktivitas-time">20 Sep, 11.05</div>
-                        </div>
-                    </div>
+                    @endforelse
                 </div>
             </div>
         </div>
@@ -1519,6 +1583,12 @@
         // Buka modal otomatis kalau datang dari menu "Kuitansi Baru" (?tambah=1)
         if (new URLSearchParams(window.location.search).has('tambah')) {
             openTambahModal();
+        }
+
+        // Toast pengingat hilang otomatis setelah 12 detik
+        const toastPengingat = document.getElementById('toastPengingat');
+        if (toastPengingat) {
+            setTimeout(() => toastPengingat.remove(), 12000);
         }
 
         document.addEventListener('click', function(e) {

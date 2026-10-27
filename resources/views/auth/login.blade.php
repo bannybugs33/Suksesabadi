@@ -569,31 +569,41 @@
                     Simpan kuitansi, pantau pembayaran, dan dapatkan pengingat jatuh tempo dalam satu tempat yang mudah dipahami.
                 </p>
 
-                <!-- Preview Widget Card -->
+                @php
+                    $ringkasRupiah = fn (float $nilai): string => $nilai >= 1000000
+                        ? 'Rp'.number_format($nilai / 1000000, 2, ',', '.').' jt'
+                        : 'Rp'.number_format($nilai, 0, ',', '.');
+                    $perubahan = $grafikPiutang['perubahan'];
+                @endphp
+
+                <!-- Preview Widget Card (data dari database, hanya angka agregat) -->
                 <div class="preview-widget">
                     <div class="preview-widget-header">
                         <div>
                             <div class="widget-metric-label">PIUTANG BULAN INI</div>
-                            <div class="widget-metric-value">Rp24,45 jt</div>
+                            <div class="widget-metric-value">{{ $ringkasRupiah($grafikPiutang['total']) }}</div>
                         </div>
-                        <div class="widget-trend-badge">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
-                                <polyline points="17 6 23 6 23 12"></polyline>
-                            </svg>
-                            <span>+8,4%</span>
-                        </div>
+                        @if (! is_null($perubahan))
+                            <div class="widget-trend-badge">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    @if ($perubahan >= 0)
+                                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline>
+                                        <polyline points="17 6 23 6 23 12"></polyline>
+                                    @else
+                                        <polyline points="23 18 13.5 8.5 8.5 13.5 1 6"></polyline>
+                                        <polyline points="17 18 23 18 23 12"></polyline>
+                                    @endif
+                                </svg>
+                                <span>{{ $perubahan >= 0 ? '+' : '−' }}{{ number_format(abs($perubahan), 1, ',', '.') }}%</span>
+                            </div>
+                        @endif
                     </div>
 
                     <!-- Mini Bar Chart -->
                     <div class="preview-bar-chart">
-                        <div class="chart-bar-item" style="height: 38px;"></div>
-                        <div class="chart-bar-item" style="height: 56px;"></div>
-                        <div class="chart-bar-item" style="height: 42px;"></div>
-                        <div class="chart-bar-item" style="height: 70px;"></div>
-                        <div class="chart-bar-item" style="height: 50px;"></div>
-                        <div class="chart-bar-item is-featured" style="height: 84px;"></div>
-                        <div class="chart-bar-item" style="height: 62px;"></div>
+                        @foreach ($grafikPiutang['bars'] as $bar)
+                            <div class="chart-bar-item {{ $bar['aktif'] ? 'is-featured' : '' }}" style="height: {{ (int) round($bar['tinggi'] * 0.84) }}px;" title="{{ $bar['label'] }}"></div>
+                        @endforeach
                     </div>
 
                     <!-- Inner Floating Notification Card -->
@@ -606,11 +616,18 @@
                                 </svg>
                             </div>
                             <div>
-                                <div class="floating-card-title">4 kuitansi perlu perhatian</div>
-                                <div class="floating-card-subtitle">Rp20.850.000 belum diselesaikan</div>
+                                @if ($pengingat['jumlah'] > 0)
+                                    <div class="floating-card-title">{{ $pengingat['jumlah'] }} kuitansi perlu perhatian</div>
+                                    <div class="floating-card-subtitle">Rp{{ number_format($pengingat['sisa'], 0, ',', '.') }} belum diselesaikan</div>
+                                @else
+                                    <div class="floating-card-title">Tidak ada kuitansi yang perlu perhatian</div>
+                                    <div class="floating-card-subtitle">Belum ada tagihan yang mendekati jatuh tempo</div>
+                                @endif
                             </div>
                         </div>
-                        <span class="floating-card-action">Lihat</span>
+                        @if ($pengingat['jumlah'] > 0)
+                            <a href="{{ route('jatuh-tempo.index') }}" class="floating-card-action" style="cursor: pointer;">Lihat</a>
+                        @endif
                     </div>
                 </div>
             </div>

@@ -36,7 +36,7 @@ class Activity extends Model
         return match (true) {
             $this->created_at->isToday() => "Hari ini, $time",
             $this->created_at->isYesterday() => "Kemarin, $time",
-            default => $this->created_at->isoFormat('D MMM') . ", $time",
+            default => $this->created_at->isoFormat('D MMM').", $time",
         };
     }
 }

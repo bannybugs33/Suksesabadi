@@ -764,6 +764,7 @@ form.rekap-filter-form a:hover {
     text-decoration: underline;
 }
 </style>
+@include('partials.sidebar-styles')
 </head>
 <body>
     @include('_sidebar')

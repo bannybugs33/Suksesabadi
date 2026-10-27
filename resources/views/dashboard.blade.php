@@ -1480,6 +1480,13 @@
         function openTambahModal() {
             document.getElementById('tambahKuitansiModal').style.display = 'flex';
         }
+        document.addEventListener('DOMContentLoaded', function () {
+    const params = new URLSearchParams(window.location.search);
+
+    if (params.get('tambah') === '1') {
+        openTambahModal();
+    }
+});
         function closeTambahModal() {
             document.getElementById('tambahKuitansiModal').style.display = 'none';
             const selectEl = document.getElementById('modalJenisSelect');

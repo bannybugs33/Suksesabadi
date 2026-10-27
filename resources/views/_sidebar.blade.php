@@ -1,110 +1,181 @@
 <style>
-    /* Menu Dropdown Collapsible */
-    .menu-dropdown {
+    /* =======================================================
+       UNIFIED SIDEBAR MENU & DROPDOWN COLLAPSIBLE STYLES
+       ======================================================= */
+    .sidebar .sidebar-menu {
         display: flex;
         flex-direction: column;
-        gap: 2px;
-        border-radius: 8px;
+        gap: 4px;
+        margin: 0;
+        padding: 0;
     }
 
-    .menu-dropdown-header {
+    /* All Main Menu Items & Dashboard Header: Exactly Identical 40px Height & 8px Radius */
+    .sidebar .sidebar-menu > a,
+    .sidebar .sidebar-menu .menu-dropdown-header {
+        height: 40px !important;
+        min-height: 40px !important;
+        max-height: 40px !important;
+        border-radius: 8px !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        border-radius: 8px;
-        transition: all 0.15s ease;
+        transition: background 0.15s ease, color 0.15s ease;
     }
 
-    .menu-dropdown-header:hover {
-        background: rgba(255, 255, 255, 0.1);
-    }
-
-    .menu-dropdown-header.menu-active {
-        background: rgba(255, 255, 255, 0.16);
-    }
-
-    .sidebar-menu .menu-dropdown-link {
-        display: flex;
-        align-items: center;
+    /* Direct Menu Links (Arsip Kuitansi, Kuitansi Baru, Rekapitulasi) */
+    .sidebar .sidebar-menu > a {
+        padding: 0 12px !important;
         gap: 10px;
-        padding: 10px 12px;
         color: #fce7eb;
         text-decoration: none;
         font-size: 13px;
         font-weight: 500;
-        flex: 1;
-        border-radius: 8px;
-        transition: color 0.15s ease;
-        background: transparent !important;
+        background: transparent;
     }
 
-    .menu-dropdown-header:hover .menu-dropdown-link,
-    .menu-dropdown-header.menu-active .menu-dropdown-link {
+    .sidebar .sidebar-menu > a:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
         color: #ffffff;
     }
 
-    .menu-dropdown-header.menu-active .menu-dropdown-link {
+    .sidebar .sidebar-menu > a.menu-active {
+        background: rgba(255, 255, 255, 0.16) !important;
+        color: #ffffff;
         font-weight: 600;
     }
 
-    .menu-toggle-btn {
-        background: none;
-        border: none;
-        padding: 10px 12px;
+    /* Dropdown Group Container */
+    .sidebar .sidebar-menu .menu-dropdown {
+        display: flex;
+        flex-direction: column;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* Dashboard Header Container */
+    .sidebar .sidebar-menu .menu-dropdown-header {
+        justify-content: space-between;
+        padding: 0 8px 0 12px !important;
+        background: transparent;
+        cursor: pointer;
+    }
+
+    .sidebar .sidebar-menu .menu-dropdown-header:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+    }
+
+    .sidebar .sidebar-menu .menu-dropdown-header.menu-active {
+        background: rgba(255, 255, 255, 0.16) !important;
+    }
+
+    /* Dashboard Link inside Header */
+    .sidebar .sidebar-menu .menu-dropdown-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 100%;
+        flex: 1;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: #fce7eb;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        background: transparent !important;
+        border: none !important;
+    }
+
+    .sidebar .sidebar-menu .menu-dropdown-header:hover .menu-dropdown-link,
+    .sidebar .sidebar-menu .menu-dropdown-header.menu-active .menu-dropdown-link {
+        color: #ffffff;
+    }
+
+    .sidebar .sidebar-menu .menu-dropdown-header.menu-active .menu-dropdown-link {
+        font-weight: 600;
+    }
+
+    /* Minimal, Clean Toggle Button (Fits seamlessly in 40px bar) */
+    .sidebar .sidebar-menu .menu-toggle-btn {
+        width: 26px;
+        height: 26px;
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        border: none !important;
         color: #fce7eb;
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 8px;
-        transition: all 0.15s ease;
+        border-radius: 6px;
+        transition: background 0.15s ease, color 0.15s ease;
+        flex-shrink: 0;
     }
 
-    .menu-toggle-btn:hover {
+    .sidebar .sidebar-menu .menu-toggle-btn:hover {
         color: #ffffff;
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.15) !important;
     }
 
-    .chevron-arrow {
-        transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    .sidebar .sidebar-menu .chevron-arrow {
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .menu-dropdown.is-open .chevron-arrow {
+    .sidebar .sidebar-menu .menu-dropdown.is-open .chevron-arrow {
         transform: rotate(180deg);
     }
 
-    .menu-dropdown-content {
-        max-height: 0;
-        overflow: hidden;
-        opacity: 0;
-        transition: max-height 0.25s ease-out, opacity 0.2s ease-out;
-        padding-left: 24px;
+    /* Ultra-Smooth Expand / Collapse Submenu using CSS Grid Rows */
+    .sidebar .sidebar-menu .menu-dropdown-wrapper {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .menu-dropdown.is-open .menu-dropdown-content {
-        max-height: 80px;
+    .sidebar .sidebar-menu .menu-dropdown.is-open .menu-dropdown-wrapper {
+        grid-template-rows: 1fr;
+    }
+
+    .sidebar .sidebar-menu .menu-dropdown-inner {
+        overflow: hidden;
+        padding-left: 18px;
+        opacity: 0;
+        transform: translateY(-4px);
+        transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar .sidebar-menu .menu-dropdown.is-open .menu-dropdown-inner {
         opacity: 1;
-        padding-top: 2px;
+        transform: translateY(0);
+        padding-top: 3px;
         padding-bottom: 2px;
     }
 
-    .sidebar-menu .menu-sub-link {
-        display: block;
-        padding: 6px 12px 6px 14px;
-        font-size: 12px;
+    /* Submenu Link (Utang & Piutang) */
+    .sidebar .sidebar-menu .menu-sub-link {
+        display: flex;
+        align-items: center;
+        height: 34px !important;
+        min-height: 34px !important;
+        max-height: 34px !important;
+        padding: 0 12px !important;
+        font-size: 12.5px;
         color: #fce7eb;
         text-decoration: none;
-        border-radius: 6px;
-        transition: all 0.15s ease;
+        border-radius: 8px !important;
+        transition: background 0.15s ease, color 0.15s ease;
         background: transparent;
+        box-sizing: border-box !important;
     }
 
-    .sidebar-menu .menu-sub-link:hover {
+    .sidebar .sidebar-menu .menu-sub-link:hover {
         color: #ffffff;
         background: rgba(255, 255, 255, 0.1) !important;
     }
 
-    .sidebar-menu .menu-sub-link.sub-active {
+    .sidebar .sidebar-menu .menu-sub-link.sub-active {
         color: #ffffff;
         font-weight: 600;
         background: rgba(255, 255, 255, 0.16) !important;
@@ -146,10 +217,12 @@
                     </svg>
                 </button>
             </div>
-            <div class="menu-dropdown-content" id="utangPiutangSubmenu">
-                <a href="{{ route('jatuh-tempo.index') }}" class="menu-sub-link {{ request()->routeIs('jatuh-tempo.*') ? 'sub-active' : '' }}">
-                    • Utang & Piutang
-                </a>
+            <div class="menu-dropdown-wrapper" id="utangPiutangSubmenu">
+                <div class="menu-dropdown-inner">
+                    <a href="{{ route('jatuh-tempo.index') }}" class="menu-sub-link {{ request()->routeIs('jatuh-tempo.*') ? 'sub-active' : '' }}">
+                        • Utang & Piutang
+                    </a>
+                </div>
             </div>
         </div>
 

@@ -22,10 +22,53 @@ class DashboardService
             'status' => $this->statusBreakdown(),
             'attention' => Receipt::open()->with('party')
                 ->dueWithin(self::ALERT_DAYS)->orderBy('due_date')->limit(5)->get(),
-            'reminder' => Receipt::open()->with('party')
-                ->whereDate('due_date', '>=', today())
-                ->dueWithin(self::ALERT_DAYS)->orderBy('due_date')->first(),
+            'reminder' => $this->reminder(),
             'activities' => Activity::latest()->limit(3)->get(),
+        ];
+    }
+
+    /**
+     * Kuitansi paling mendesak untuk popup pengingat.
+     * Prioritas: yang akan jatuh tempo (hari ini s.d. H-3); jika tidak ada,
+     * ambil yang paling lama terlambat, supaya pengingat tidak hilang diam-diam.
+     */
+    private function reminder(): ?Receipt
+    {
+        $candidates = Receipt::open()->with('party')->dueWithin(self::ALERT_DAYS);
+
+        return (clone $candidates)->whereDate('due_date', '>=', today())->orderBy('due_date')->first()
+            ?? $candidates->orderBy('due_date')->first();
+    }
+
+    /**
+     * Ringkasan untuk kartu pengingat di halaman login.
+     * Hanya angka agregat (tanpa nama pihak) karena pengunjung belum login.
+     *
+     * @return array{receivable: int, trend: ?float, bars: array<int, array{label: string, percent: int, active: bool}>, attention_count: int, attention_remaining: int}
+     */
+    public function loginSummary(): array
+    {
+        $attention = Receipt::open()->dueWithin(self::ALERT_DAYS)
+            ->selectRaw('COUNT(*) as total, COALESCE(SUM(total_amount - paid_amount), 0) as remaining')
+            ->first();
+
+        $months = $this->cashflow(8)['months'];
+        $in = $months->pluck('in');
+        $last = $in->count() - 1;
+        $current = (int) $in->get($last, 0);
+        $previous = (int) $in->get($last - 1, 0);
+        $maxIn = max((int) $in->max(), 1);
+
+        return [
+            'receivable' => $this->outstanding(Receipt::TYPE_RECEIVABLE)['remaining'],
+            'trend' => $previous > 0 ? round(($current - $previous) / $previous * 100, 1) : null,
+            'bars' => $months->map(fn ($month, $i) => [
+                'label' => $month['label'],
+                'percent' => max((int) round($month['in'] / $maxIn * 100), 8),
+                'active' => $i === $last,
+            ])->all(),
+            'attention_count' => (int) $attention->total,
+            'attention_remaining' => (int) $attention->remaining,
         ];
     }
 
@@ -71,16 +114,16 @@ class DashboardService
     }
 
     /** Piutang masuk vs utang keluar, 6 bulan terakhir. */
-    private function cashflow(): array
+    private function cashflow(int $span = 6): array
     {
-        $start = now()->startOfMonth()->subMonths(5);
+        $start = now()->startOfMonth()->subMonths($span - 1);
 
         $payments = Payment::query()
             ->join('receipts', 'receipts.id', '=', 'payments.receipt_id')
             ->where('payments.paid_at', '>=', $start)
             ->get(['payments.amount', 'payments.paid_at', 'receipts.type']);
 
-        $months = collect(range(0, 5))->map(function ($i) use ($start, $payments) {
+        $months = collect(range(0, $span - 1))->map(function ($i) use ($start, $payments) {
             $month = $start->copy()->addMonths($i);
             $inMonth = $payments->filter(
                 fn ($p) => $p->paid_at->format('Y-m') === $month->format('Y-m')

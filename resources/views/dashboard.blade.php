@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,6 +22,7 @@
             line-height: 1.5;
         }
 
+        /* Sidebar */
         .sidebar {
             position: fixed;
             inset: 0 auto 0 0;
@@ -188,6 +188,7 @@
             margin-top: 1px;
         }
 
+        /* Sidebar User Profile */
         .sidebar-user {
             display: flex;
             align-items: center;
@@ -250,12 +251,14 @@
             background: rgba(255, 255, 255, 0.15);
         }
 
+        /* Main Content */
         .main-content {
             margin-left: 220px;
             padding: 32px 36px;
             max-width: 1400px;
         }
 
+        /* Top Header */
         .dashboard-header {
             display: flex;
             align-items: center;
@@ -299,6 +302,7 @@
             background: #7a2232;
         }
 
+        /* Top Warning Banner: Peringatan Jatuh Tempo */
         .warning-banner {
             background: #fdf2f4;
             border: 1px solid #fee2e2;
@@ -360,6 +364,7 @@
             border-color: #d1d5db;
         }
 
+        /* 4 Summary Cards Grid */
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -444,6 +449,7 @@
             font-weight: 500;
         }
 
+        /* 2-Column Layout for Middle & Bottom Rows */
         .content-grid-row {
             display: grid;
             grid-template-columns: 1.75fr 1fr;
@@ -485,6 +491,7 @@
             text-decoration: underline;
         }
 
+        /* Arus Utang & Piutang Chart Card */
         .chart-legend-row {
             display: flex;
             align-items: center;
@@ -514,6 +521,7 @@
             background: #91283b;
         }
 
+        /* Bar Chart Visual */
         .bar-chart-container {
             height: 180px;
             display: flex;
@@ -568,6 +576,7 @@
             font-weight: 500;
         }
 
+        /* Floating Popup Over Chart: Detail Pengingat */
         .chart-overlay-popup {
             position: absolute;
             top: 24px;
@@ -691,6 +700,7 @@
             background: #7a2232;
         }
 
+        /* Status Pembayaran Progress Bars */
         .status-progress-list {
             display: flex;
             flex-direction: column;
@@ -754,6 +764,7 @@
             color: #1a1a24;
         }
 
+        /* Perlu Perhatian List */
         .perhatian-list {
             display: flex;
             flex-direction: column;
@@ -839,6 +850,7 @@
             color: #b45309;
         }
 
+        /* Aktivitas Terbaru List */
         .aktivitas-list {
             display: flex;
             flex-direction: column;
@@ -887,6 +899,7 @@
             margin-top: 4px;
         }
 
+        /* Modal Tambah Kuitansi */
         .modal-backdrop {
             display: none;
             position: fixed;
@@ -940,15 +953,14 @@
             background: #f3f4f6;
         }
 
+        /* Responsive Breakpoints */
         @media (max-width: 1120px) {
             .summary-grid {
                 grid-template-columns: repeat(2, 1fr);
             }
-
             .content-grid-row {
                 grid-template-columns: 1fr;
             }
-
             .chart-overlay-popup {
                 position: static;
                 width: 100%;
@@ -962,179 +974,116 @@
                 width: 100%;
                 padding: 16px;
             }
-
             .main-content {
                 margin-left: 0;
                 padding: 20px 16px;
             }
-
             .summary-grid {
                 grid-template-columns: 1fr;
             }
+        .modal-custom-select {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 38px;
+            padding: 8px 12px;
+            border: 1px solid #d8dbe2;
+            border-radius: 8px;
+            font-size: 13px;
+            background: #ffffff;
+            color: #1a1a24;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
 
-            .modal-custom-select {
-                position: relative;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                width: 100%;
-                height: 38px;
-                padding: 8px 12px;
-                border: 1px solid #d8dbe2;
-                border-radius: 8px;
-                font-size: 13px;
-                background: #ffffff;
-                color: #1a1a24;
-                cursor: pointer;
-                transition: all 0.15s ease;
-                user-select: none;
+        .modal-custom-select:hover {
+            border-color: #b0b4be;
+            background: #fafafc;
+        }
+
+        .modal-custom-select.is-open {
+            border-color: #91283b;
+            box-shadow: 0 0 0 3px rgba(145, 40, 59, 0.12);
+        }
+
+        .dropdown-chevron {
+            color: #717381;
+            transition: transform 0.2s ease, color 0.15s ease;
+            flex-shrink: 0;
+        }
+
+        .modal-custom-select.is-open .dropdown-chevron {
+            transform: rotate(180deg);
+            color: #91283b;
+        }
+
+        .custom-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            left: 0;
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #e6e7ec;
+            border-radius: 12px;
+            box-shadow: 0 14px 34px -4px rgba(26, 26, 36, 0.14), 0 4px 12px -2px rgba(26, 26, 36, 0.05);
+            padding: 6px;
+            z-index: 200;
+            box-sizing: border-box;
+            animation: dropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-custom-select.is-open .custom-dropdown-menu {
+            display: block;
+        }
+
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-6px) scale(0.98);
             }
-
-            .modal-custom-select:hover {
-                border-color: #b0b4be;
-                background: #fafafc;
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
             }
+        }
 
-            .modal-custom-select.is-open {
-                border-color: #91283b;
-                box-shadow: 0 0 0 3px rgba(145, 40, 59, 0.12);
-            }
+        .custom-dropdown-item {
+            padding: 9px 12px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #292930;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            cursor: pointer;
+            transition: all 0.12s ease;
+        }
 
-            .dropdown-chevron {
-                color: #717381;
-                transition: transform 0.2s ease, color 0.15s ease;
-                flex-shrink: 0;
-            }
+        .custom-dropdown-item:hover {
+            background: #fdf2f4;
+            color: #91283b;
+        }
 
-            .modal-custom-select.is-open .dropdown-chevron {
-                transform: rotate(180deg);
-                color: #91283b;
-            }
+        .custom-dropdown-item.is-selected {
+            background: #fbf2f4;
+            color: #91283b;
+            font-weight: 600;
+        }
 
-            .custom-dropdown-menu {
-                display: none;
-                position: absolute;
-                top: calc(100% + 6px);
-                left: 0;
-                width: 100%;
-                background: #ffffff;
-                border: 1px solid #e6e7ec;
-                border-radius: 12px;
-                box-shadow: 0 14px 34px -4px rgba(26, 26, 36, 0.14), 0 4px 12px -2px rgba(26, 26, 36, 0.05);
-                padding: 6px;
-                z-index: 200;
-                box-sizing: border-box;
-                animation: dropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-            }
-
-            .modal-custom-select.is-open .custom-dropdown-menu {
-                display: block;
-            }
-
-            @keyframes dropdownFadeIn {
-                from {
-                    opacity: 0;
-                    transform: translateY(-6px) scale(0.98);
-                }
-
-                to {
-                    opacity: 1;
-                    transform: translateY(0) scale(1);
-                }
-            }
-
-            .custom-dropdown-item {
-                padding: 9px 12px;
-                border-radius: 8px;
-                font-size: 13px;
-                font-weight: 500;
-                color: #292930;
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                gap: 12px;
-                cursor: pointer;
-                transition: all 0.12s ease;
-            }
-
-            .custom-dropdown-item:hover {
-                background: #fdf2f4;
-                color: #91283b;
-            }
-
-            .custom-dropdown-item.is-selected {
-                background: #fbf2f4;
-                color: #91283b;
-                font-weight: 600;
-            }
-
-            .dropdown-check {
-                color: #91283b;
-                flex-shrink: 0;
-            }
-
-            .toast-pengingat {
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                z-index: 60;
-                display: flex;
-                align-items: flex-start;
-                gap: 12px;
-                max-width: 340px;
-                padding: 14px 16px;
-                background: #ffffff;
-                border: 1px solid #e6e7ec;
-                border-left: 4px solid #91283b;
-                border-radius: 10px;
-                box-shadow: 0 12px 28px rgba(32, 32, 48, 0.16);
-                animation: toastMasuk 0.3s ease;
-            }
-
-            .toast-pengingat-body strong {
-                display: block;
-                font-size: 13px;
-                color: #1a1a24;
-            }
-
-            .toast-pengingat-body p {
-                margin: 4px 0 8px;
-                font-size: 12px;
-                color: #555765;
-                line-height: 1.45;
-            }
-
-            .toast-pengingat-link {
-                font-size: 12px;
-                font-weight: 700;
-                color: #91283b;
-                text-decoration: none;
-            }
-
-            .toast-pengingat-close {
-                background: none;
-                border: none;
-                font-size: 20px;
-                line-height: 1;
-                color: #8b8e9c;
-                cursor: pointer;
-            }
-
-            @keyframes toastMasuk {
-                from {
-                    opacity: 0;
-                    transform: translateY(-8px);
-                }
-
-                to {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-            }
+        .dropdown-check {
+            color: #91283b;
+            flex-shrink: 0;
+        }
     </style>
 </head>
-
 <body>
+    <!-- Sidebar -->
     <aside class="sidebar">
         <div class="brand">
             <div class="brand-icon">
@@ -1166,14 +1115,14 @@
                     • Utang & Piutang
                 </a>
             </div>
-            <a href="{{ route('arsip-kuitansi.index') }}">
+            <span class="menu-disabled" onclick="openTambahModal()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="21 8 21 21 3 21 3 8"></polyline>
                     <rect x="1" y="3" width="22" height="5"></rect>
                     <line x1="10" y1="12" x2="14" y2="12"></line>
                 </svg>
                 Arsip Kuitansi
-            </a>
+            </span>
             <span class="menu-disabled" onclick="openTambahModal()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1195,6 +1144,7 @@
 
         <div class="sidebar-spacer"></div>
 
+        <!-- Sync Info Box -->
         <div class="sync-info-box">
             <div class="sync-info-status">
                 <span class="sync-dot"></span>
@@ -1204,6 +1154,7 @@
             <div class="sync-info-time">{{ $tanggalAcuan->translatedFormat('d M Y') }}, {{ now()->format('H.i') }}</div>
         </div>
 
+        <!-- User Profile Bar -->
         <div class="sidebar-user">
             <div class="avatar">{{ strtoupper(substr(auth()->user()->name ?? 'AS', 0, 2)) }}</div>
             <div class="sidebar-user-info">
@@ -1223,25 +1174,9 @@
         </div>
     </aside>
 
+    <!-- Main Content Area -->
     <main class="main-content">
-        @if (session('pengingat_login') && session('pengingat_login')['jumlah'] > 0)
-        @php($pengingatLogin = session('pengingat_login'))
-        <div class="toast-pengingat" id="toastPengingat" role="alert">
-            <div class="toast-pengingat-body">
-                <strong>Pengingat jatuh tempo</strong>
-                <p>
-                    {{ $pengingatLogin['jumlah'] }} kuitansi perlu perhatian
-                    @if ($pengingatLogin['terlambat'] > 0)
-                    ({{ $pengingatLogin['terlambat'] }} terlambat)
-                    @endif
-                    • Rp{{ number_format($pengingatLogin['sisa'], 0, ',', '.') }} belum diselesaikan.
-                </p>
-                <a href="{{ route('jatuh-tempo.index') }}" class="toast-pengingat-link">Lihat detail</a>
-            </div>
-            <button type="button" class="toast-pengingat-close" onclick="document.getElementById('toastPengingat').remove()" aria-label="Tutup pengingat">&times;</button>
-        </div>
-        @endif
-
+        <!-- Dashboard Top Header -->
         <header class="dashboard-header">
             <div class="header-title-wrap">
                 <h1>Selamat pagi, Pak {{ explode(' ', auth()->user()->name ?? 'Andi')[0] }}</h1>
@@ -1256,6 +1191,7 @@
             </button>
         </header>
 
+        <!-- Peringatan Jatuh Tempo Banner -->
         <div class="warning-banner">
             <div class="warning-banner-left">
                 <div class="warning-icon-box">
@@ -1266,17 +1202,15 @@
                 </div>
                 <div>
                     <h2>Peringatan jatuh tempo</h2>
-                    @if ($perluPerhatianCount > 0)
                     <p>Pengingat aktif mulai H-3. Ada {{ $perluPerhatianCount }} utang dan piutang yang perlu perhatian hari ini.</p>
-                    @else
-                    <p>Pengingat aktif mulai H-3. Belum ada utang atau piutang yang mendekati jatuh tempo.</p>
-                    @endif
                 </div>
             </div>
             <a href="{{ route('jatuh-tempo.index') }}" class="btn-lihat-detail">Lihat detail</a>
         </div>
 
+        <!-- 4 Summary Metric Cards -->
         <div class="summary-grid">
+            <!-- Card 1: Sisa Piutang Pelanggan -->
             <div class="summary-card">
                 <div class="summary-card-header">
                     <span class="summary-card-title">Sisa piutang pelanggan</span>
@@ -1291,6 +1225,7 @@
                 <div class="summary-card-subtext">{{ $kuitansiPelangganCount }} kuitansi pelanggan</div>
             </div>
 
+            <!-- Card 2: Sisa Utang Supplier -->
             <div class="summary-card">
                 <div class="summary-card-header">
                     <span class="summary-card-title">Sisa utang supplier</span>
@@ -1305,6 +1240,7 @@
                 <div class="summary-card-subtext red">{{ $kuitansiSupplierCount }} kuitansi supplier</div>
             </div>
 
+            <!-- Card 3: Jatuh Tempo -->
             <div class="summary-card">
                 <div class="summary-card-header">
                     <span class="summary-card-title">Jatuh tempo</span>
@@ -1323,6 +1259,7 @@
                 <div class="summary-card-subtext amber">{{ $terlambatCount }} terlambat • {{ $besokCount }} besok</div>
             </div>
 
+            <!-- Card 4: Lunas Bulan Ini -->
             <div class="summary-card">
                 <div class="summary-card-header">
                     <span class="summary-card-title">Lunas bulan ini</span>
@@ -1338,6 +1275,7 @@
             </div>
         </div>
 
+        <!-- Middle Row: Arus Utang & Piutang vs Status Pembayaran -->
         <div class="content-grid-row">
             <!-- Left: Arus Utang & Piutang Chart -->
             <div class="card-box">
@@ -1357,18 +1295,19 @@
                     </div>
                 </div>
 
+                <!-- Dual Bar Chart -->
                 <div class="bar-chart-container">
                     @foreach ($chartData as $c)
-                    <div class="chart-month-col">
-                        <div class="chart-bars-wrap">
-                            <div class="bar-item gray" style="height: {{ $c['piutang'] }}%;" title="Piutang {{ $c['bulan'] }}: Rp{{ number_format($c['piutang_nominal'], 0, ',', '.') }}"></div>
-                            <div class="bar-item red" style="height: {{ $c['utang'] }}%;" title="Utang {{ $c['bulan'] }}: Rp{{ number_format($c['utang_nominal'], 0, ',', '.') }}"></div>
+                        <div class="chart-month-col">
+                            <div class="chart-bars-wrap">
+                                <div class="bar-item gray" style="height: {{ $c['piutang'] }}%;" title="Piutang {{ $c['bulan'] }}"></div>
+                                <div class="bar-item red" style="height: {{ $c['utang'] }}%;" title="Utang {{ $c['bulan'] }}"></div>
+                            </div>
+                            <span class="month-label">{{ $c['bulan'] }}</span>
                         </div>
-                        <span class="month-label">{{ $c['bulan'] }}</span>
-                    </div>
                     @endforeach
 
-                    @if ($popupItem)
+                    <!-- Floating Detail Pengingat Popup -->
                     <div class="chart-overlay-popup" id="detailPengingatPopup">
                         <div class="popup-header">
                             <div>
@@ -1383,32 +1322,34 @@
                             </button>
                         </div>
 
-                        <div class="popup-item-box">
-                            <div class="popup-item-left">
-                                <div class="popup-item-icon">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
+                        @if ($popupItem)
+                            <div class="popup-item-box">
+                                <div class="popup-item-left">
+                                    <div class="popup-item-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <polyline points="12 6 12 12 16 14"></polyline>
+                                        </svg>
+                                    </div>
+                                    <div style="min-width: 0;">
+                                        <div class="popup-item-title">{{ $popupItem->tempo_label }} - {{ \Carbon\Carbon::parse($popupItem->tanggal_jatuh_tempo)->translatedFormat('d M Y') }}</div>
+                                        <div class="popup-item-meta">{{ $popupItem->nama_pihak }} • {{ $popupItem->nomor_kuitansi }}</div>
+                                    </div>
                                 </div>
-                                <div style="min-width: 0;">
-                                    <div class="popup-item-title">{{ $popupItem->tempo_label }} - {{ \Carbon\Carbon::parse($popupItem->tanggal_jatuh_tempo)->translatedFormat('d M Y') }}</div>
-                                    <div class="popup-item-meta">{{ $popupItem->nama_pihak }} • {{ $popupItem->nomor_kuitansi }}</div>
+                                <div class="popup-item-amount">
+                                    Rp{{ number_format($popupItem->sisa, 0, ',', '.') }}
                                 </div>
                             </div>
-                            <div class="popup-item-amount">
-                                Rp{{ number_format($popupItem->sisa, 0, ',', '.') }}
-                            </div>
-                        </div>
 
-                        <a href="{{ route('jatuh-tempo.index', ['selected' => $popupItem->id]) }}" class="btn-popup-action">
-                            Lihat detail
-                        </a>
+                            <a href="{{ route('jatuh-tempo.index', ['selected' => $popupItem->id]) }}" class="btn-popup-action">
+                                Lihat detail
+                            </a>
+                        @endif
                     </div>
-                    @endif
                 </div>
             </div>
 
+            <!-- Right: Status Pembayaran Breakdown -->
             <div class="card-box">
                 <div class="card-box-header">
                     <h2 class="card-box-title">Status pembayaran</h2>
@@ -1417,15 +1358,15 @@
 
                 <div class="status-progress-list">
                     @foreach ($statusPembayaran as $key => $st)
-                    <div class="status-progress-item">
-                        <div class="status-row-label">
-                            <span class="status-name">{{ $st['label'] }}</span>
-                            <span class="status-count-pct">{{ $st['count'] }} kuitansi • {{ $st['pct'] }}%</span>
+                        <div class="status-progress-item">
+                            <div class="status-row-label">
+                                <span class="status-name">{{ $st['label'] }}</span>
+                                <span class="status-count-pct">{{ $st['count'] }} kuitansi • {{ $st['pct'] }}%</span>
+                            </div>
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: {{ $st['pct'] }}%; background: {{ $st['color'] }};"></div>
+                            </div>
                         </div>
-                        <div class="progress-track">
-                            <div class="progress-fill" style="width: {{ $st['pct'] }}%; background: {{ $st['color'] }};"></div>
-                        </div>
-                    </div>
                     @endforeach
                 </div>
 
@@ -1436,6 +1377,7 @@
             </div>
         </div>
 
+        <!-- Bottom Row: Perlu Perhatian vs Aktivitas Terbaru -->
         <div class="content-grid-row">
             <!-- Left: Perlu Perhatian List -->
             <div class="card-box">
@@ -1446,78 +1388,91 @@
 
                 <div class="perhatian-list">
                     @forelse ($itemsPerluPerhatian as $item)
-                    <a href="{{ route('jatuh-tempo.index', ['selected' => $item->id]) }}" class="perhatian-item">
-                        <div class="perhatian-left">
-                            <div class="perhatian-icon-box {{ $item->tempo_code === 'terlambat' ? 'red' : 'amber' }}">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                </svg>
+                        <a href="{{ route('jatuh-tempo.index', ['selected' => $item->id]) }}" class="perhatian-item">
+                            <div class="perhatian-left">
+                                <div class="perhatian-icon-box {{ $item->tempo_code === 'terlambat' ? 'red' : 'amber' }}">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <div class="perhatian-party">{{ $item->nama_pihak }}</div>
+                                    <div class="perhatian-meta">{{ $item->nomor_kuitansi }} • Tempo {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->translatedFormat('d M Y') }}</div>
+                                </div>
                             </div>
-                            <div>
-                                <div class="perhatian-party">{{ $item->nama_pihak }}</div>
-                                <div class="perhatian-meta">{{ $item->nomor_kuitansi }} • Tempo {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->translatedFormat('d M Y') }}</div>
+                            <div class="perhatian-right">
+                                <div class="perhatian-nominal">Rp{{ number_format($item->sisa, 0, ',', '.') }}</div>
+                                <div class="perhatian-tempo {{ $item->tempo_code === 'terlambat' ? 'red' : 'amber' }}">{{ $item->tempo_label }}</div>
                             </div>
-                        </div>
-                        <div class="perhatian-right">
-                            <div class="perhatian-nominal">Rp{{ number_format($item->sisa, 0, ',', '.') }}</div>
-                            <div class="perhatian-tempo {{ $item->tempo_code === 'terlambat' ? 'red' : 'amber' }}">{{ $item->tempo_label }}</div>
-                        </div>
-                    </a>
+                        </a>
                     @empty
-                    <div style="padding: 24px 16px; text-align: center; color: #6b7280; font-size: 13px;">
-                        Tidak ada tagihan yang memerlukan perhatian saat ini.
-                    </div>
+                        <div style="padding: 24px 16px; text-align: center; color: #6b7280; font-size: 13px;">
+                            Tidak ada tagihan yang memerlukan perhatian saat ini.
+                        </div>
                     @endforelse
                 </div>
             </div>
 
+            <!-- Right: Aktivitas Terbaru -->
             <div class="card-box">
                 <div class="card-box-header">
                     <h2 class="card-box-title">Aktivitas terbaru</h2>
                 </div>
 
                 <div class="aktivitas-list">
-                    @forelse ($aktivitasTerbaru as $aktivitas)
+                    <!-- Aktivitas 1 -->
                     <div class="aktivitas-item">
-                        <div class="aktivitas-icon-box" style="background: {{ $aktivitas['badge_bg'] }}; color: {{ $aktivitas['badge_color'] }};">
-                            @if ($aktivitas['type'] === 'cicilan')
+                        <div class="aktivitas-icon-box" style="background: #f3f4f6; color: #4b5563;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="12" cy="12" r="9"></circle>
                                 <path d="M12 6v12M15 9.5H10.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H9"></path>
                             </svg>
-                            @elseif ($aktivitas['type'] === 'kuitansi')
+                        </div>
+                        <div class="aktivitas-content">
+                            <div class="aktivitas-title">Pembayaran cicilan dicatat</div>
+                            <div class="aktivitas-meta">Warung Bu Sari • Rp2.000.000</div>
+                            <div class="aktivitas-time">Hari ini, 09.18</div>
+                        </div>
+                    </div>
+
+                    <!-- Aktivitas 2 -->
+                    <div class="aktivitas-item">
+                        <div class="aktivitas-icon-box" style="background: #fef2f2; color: #ef4444;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                                 <polyline points="14 2 14 8 20 8"></polyline>
                                 <line x1="12" y1="18" x2="12" y2="12"></line>
                                 <line x1="9" y1="15" x2="15" y2="15"></line>
                             </svg>
-                            @else
+                        </div>
+                        <div class="aktivitas-content">
+                            <div class="aktivitas-title">Kuitansi baru ditambahkan</div>
+                            <div class="aktivitas-meta">PT Sumber Pangan • Rp12.400.000</div>
+                            <div class="aktivitas-time">Kemarin, 16.42</div>
+                        </div>
+                    </div>
+
+                    <!-- Aktivitas 3 -->
+                    <div class="aktivitas-item">
+                        <div class="aktivitas-icon-box" style="background: #eff6ff; color: #3b82f6;">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                                 <polyline points="22 4 12 14.01 9 11.01"></polyline>
                             </svg>
-                            @endif
                         </div>
                         <div class="aktivitas-content">
-                            <div class="aktivitas-title">{{ $aktivitas['title'] }}</div>
-                            <div class="aktivitas-meta">{{ $aktivitas['subtitle'] }}</div>
-                            <div class="aktivitas-time">{{ $aktivitas['time'] }}</div>
+                            <div class="aktivitas-title">Kuitansi ditandai lunas</div>
+                            <div class="aktivitas-meta">CV Segar Abadi • Rp5.800.000</div>
+                            <div class="aktivitas-time">20 Sep, 11.05</div>
                         </div>
                     </div>
-                    @empty
-                    <div class="aktivitas-item">
-                        <div class="aktivitas-content">
-                            <div class="aktivitas-meta">Belum ada aktivitas.</div>
-                        </div>
-                    </div>
-                    @endforelse
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Modal Tambah Kuitansi Quick View -->
     <div class="modal-backdrop" id="tambahKuitansiModal" onclick="if(event.target === this) closeTambahModal()">
         <div class="modal-card">
             <div class="modal-header">
@@ -1614,7 +1569,6 @@
         function openTambahModal() {
             document.getElementById('tambahKuitansiModal').style.display = 'flex';
         }
-
         function closeTambahModal() {
             document.getElementById('tambahKuitansiModal').style.display = 'none';
             const selectEl = document.getElementById('modalJenisSelect');
@@ -1644,15 +1598,6 @@
             });
         }
 
-        if (new URLSearchParams(window.location.search).has('tambah')) {
-            openTambahModal();
-        }
-
-        const toastPengingat = document.getElementById('toastPengingat');
-        if (toastPengingat) {
-            setTimeout(() => toastPengingat.remove(), 12000);
-        }
-
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.modal-custom-select')) {
                 document.querySelectorAll('.modal-custom-select.is-open').forEach(el => el.classList.remove('is-open'));
@@ -1660,5 +1605,4 @@
         });
     </script>
 </body>
-
 </html>

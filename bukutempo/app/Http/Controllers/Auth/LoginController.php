@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
+use App\Services\DashboardService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -11,9 +12,18 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
-    public function create(): View
+    public function create(DashboardService $dashboard): View
     {
-        return view('auth.login');
+        // Kalau perhitungan gagal (mis. database belum dimigrasi), halaman login tetap tampil.
+        $summary = rescue(fn () => $dashboard->loginSummary(), [
+            'receivable' => 0,
+            'trend' => null,
+            'bars' => [],
+            'attention_count' => 0,
+            'attention_remaining' => 0,
+        ]);
+
+        return view('auth.login', ['summary' => $summary]);
     }
 
     public function store(LoginRequest $request): RedirectResponse

@@ -76,15 +76,15 @@ class DashboardTest extends TestCase
         $response = $this->actingAs($user)->get('/dashboard');
 
         $response->assertStatus(200);
-        $response->assertSee('Rp24.450.000');
-        $response->assertSee('5 kuitansi pelanggan');
-        $response->assertSee('Rp20.800.000');
-        $response->assertSee('3 kuitansi supplier');
+        $response->assertSee('Rp12.450.000');
+        $response->assertSee('3 kuitansi pelanggan');
+        $response->assertSee('Rp8.400.000');
+        $response->assertSee('1 kuitansi supplier');
         $response->assertSee('4 kuitansi');
         $response->assertSee('3 terlambat • 1 besok');
-        $response->assertSee('Rp18.200.000');
-        $response->assertSee('7 pembayaran selesai');
-        $response->assertSee('Rp63.450.000');
+        $response->assertSee('Rp15.000.000');
+        $response->assertSee('1 pembayaran selesai');
+        $response->assertSee('Rp45.850.000');
     }
 
     public function test_dashboard_displays_jatuh_tempo_warning_banner_and_perlu_perhatian(): void
@@ -106,5 +106,45 @@ class DashboardTest extends TestCase
         $response->assertSee('Kantin Melati');
         $response->assertSee('Tambah kuitansi');
         $response->assertSee('Kuitansi Baru');
+    }
+
+    public function test_dashboard_shows_zero_values_without_dummy_data_for_user_without_kuitansi(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertSee('0 kuitansi pelanggan');
+        $response->assertSee('0 kuitansi supplier');
+        $response->assertSee('0 terlambat • 0 besok');
+        $response->assertSee('Belum ada utang atau piutang yang mendekati jatuh tempo.');
+        $response->assertDontSee('Rp24.450.000');
+        $response->assertDontSee('detailPengingatPopup');
+    }
+
+    public function test_dashboard_popup_shows_most_urgent_reminder(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $user = User::query()->first();
+
+        $response = $this->actingAs($user)->get('/dashboard');
+
+        $response->assertSee('detailPengingatPopup');
+        $response->assertSee('Terlambat 7 hari');
+    }
+
+    public function test_dashboard_shows_login_reminder_toast_from_session(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+        $user = User::query()->first();
+
+        $response = $this->actingAs($user)
+            ->withSession(['pengingat_login' => ['jumlah' => 4, 'terlambat' => 3, 'sisa' => 20850000.0]])
+            ->get('/dashboard');
+
+        $response->assertSee('toastPengingat');
+        $response->assertSee('4 kuitansi perlu perhatian');
+        $response->assertSee('Rp20.850.000 belum diselesaikan');
     }
 }

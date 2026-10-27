@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,6 +10,13 @@ use Illuminate\Support\Facades\Storage;
 
 class Kuitansi extends Model
 {
+    /**
+     * Kode tempo yang dianggap "perlu perhatian" (pengingat aktif mulai H-3).
+     *
+     * @var array<int, string>
+     */
+    public const KODE_PENGINGAT = ['terlambat', 'hari_ini', 'h-1', 'h-2', 'h-3'];
+
     /**
      * @var string
      */
@@ -39,6 +47,113 @@ class Kuitansi extends Model
     public function pembayaran(): HasMany
     {
         return $this->hasMany(Pembayaran::class, 'kuitansi_id');
+    }
+
+    /**
+     * Hitung label dan kode tempo sebuah kuitansi terhadap tanggal acuan.
+     * Kuitansi lunas atau tanpa jatuh tempo selalu dianggap aman.
+     *
+     * @return array{label: string, code: string}
+     */
+    public static function infoTempo(mixed $tanggalJatuhTempo, ?string $status, Carbon $tanggalAcuan): array
+    {
+        if (! $tanggalJatuhTempo || $status === 'lunas') {
+            return ['label' => '-', 'code' => 'aman'];
+        }
+
+        $acuan = $tanggalAcuan->copy()->startOfDay();
+        $tempo = Carbon::parse($tanggalJatuhTempo)->startOfDay();
+        $selisih = (int) abs($acuan->diffInDays($tempo));
+
+        if ($tempo->lt($acuan)) {
+            return ['label' => "Terlambat {$selisih} hari", 'code' => 'terlambat'];
+        }
+
+        if ($selisih === 0) {
+            return ['label' => 'Jatuh tempo hari ini', 'code' => 'hari_ini'];
+        }
+
+        if ($selisih === 1) {
+            return ['label' => 'Jatuh tempo besok', 'code' => 'h-1'];
+        }
+
+        if ($selisih <= 3) {
+            return ['label' => "H-{$selisih}", 'code' => "h-{$selisih}"];
+        }
+
+        return ['label' => 'Mendatang', 'code' => 'mendatang'];
+    }
+
+    /**
+     * Ringkasan pengingat jatuh tempo: kuitansi belum lunas yang sudah lewat
+     * atau jatuh tempo dalam 3 hari ke depan.
+     * Jika $userId null, dihitung untuk seluruh toko (hanya angka agregat).
+     *
+     * @return array{jumlah: int, terlambat: int, sisa: float}
+     */
+    public static function ringkasanPengingat(?int $userId = null, ?Carbon $tanggalAcuan = null): array
+    {
+        $acuan = ($tanggalAcuan ?? Carbon::today())->copy()->startOfDay();
+        $batas = $acuan->copy()->addDays(3)->toDateString();
+
+        $items = static::query()
+            ->when($userId, fn ($q) => $q->where('user_id', $userId))
+            ->where('status_pembayaran', '!=', 'lunas')
+            ->whereNotNull('tanggal_jatuh_tempo')
+            ->whereDate('tanggal_jatuh_tempo', '<=', $batas)
+            ->withSum('pembayaran as total_terbayar', 'nominal')
+            ->get();
+
+        return [
+            'jumlah' => $items->count(),
+            'terlambat' => $items->filter(fn (self $k) => $k->tanggal_jatuh_tempo->lt($acuan))->count(),
+            'sisa' => (float) $items->sum(
+                fn (self $k) => max((float) $k->nominal_transaksi - (float) $k->total_terbayar, 0)
+            ),
+        ];
+    }
+
+    /**
+     * Data grafik batang piutang yang dicatat per bulan (untuk panel halaman login).
+     *
+     * @return array{bars: array<int, array{label: string, nilai: float, tinggi: int, aktif: bool}>, total: float, perubahan: ?float}
+     */
+    public static function grafikPiutangBulanan(?Carbon $tanggalAcuan = null, int $jumlahBulan = 7): array
+    {
+        $bulanIni = ($tanggalAcuan ?? Carbon::today())->copy()->startOfMonth();
+        $awal = $bulanIni->copy()->subMonths($jumlahBulan - 1);
+
+        $perBulan = static::query()
+            ->where('jenis', 'piutang')
+            ->whereDate('tanggal_kuitansi', '>=', $awal->toDateString())
+            ->get(['tanggal_kuitansi', 'nominal_transaksi'])
+            ->groupBy(fn (self $k) => $k->tanggal_kuitansi->format('Y-m'))
+            ->map(fn ($grup) => (float) $grup->sum('nominal_transaksi'));
+
+        $bars = [];
+        for ($i = 0; $i < $jumlahBulan; $i++) {
+            $bulan = $awal->copy()->addMonths($i);
+            $bars[] = [
+                'label' => $bulan->translatedFormat('M'),
+                'nilai' => (float) $perBulan->get($bulan->format('Y-m'), 0.0),
+                'tinggi' => 12,
+                'aktif' => $i === $jumlahBulan - 1,
+            ];
+        }
+
+        $maks = max(array_column($bars, 'nilai'));
+        foreach ($bars as $i => $bar) {
+            $bars[$i]['tinggi'] = $maks > 0 ? max((int) round($bar['nilai'] / $maks * 100), 12) : 12;
+        }
+
+        $sekarang = $bars[$jumlahBulan - 1]['nilai'];
+        $sebelumnya = $bars[$jumlahBulan - 2]['nilai'];
+
+        return [
+            'bars' => $bars,
+            'total' => $sekarang,
+            'perubahan' => $sebelumnya > 0 ? round(($sekarang - $sebelumnya) / $sebelumnya * 100, 1) : null,
+        ];
     }
 
     /**

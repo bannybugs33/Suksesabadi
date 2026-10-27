@@ -93,7 +93,7 @@
                     <div class="mt-3 flex items-center gap-3 rounded-xl bg-brand-50 p-3">
                         <span class="grid size-9 place-items-center rounded-lg bg-brand-500 text-white"><x-icon name="clock" class="size-4" /></span>
                         <div class="min-w-0 flex-1 text-xs">
-                            <p class="font-semibold">H-{{ $reminder->days_left }} · {{ $reminder->due_date->isoFormat('D MMM Y') }}</p>
+                            <p class="font-semibold">{{ $reminder->due_label }} · {{ $reminder->due_date->isoFormat('D MMM Y') }}</p>
                             <p class="truncate text-[10px] text-ink-soft">{{ $reminder->party->name }} • {{ $reminder->code }}</p>
                         </div>
                         <span class="text-xs font-semibold text-brand-500">@rupiah($reminder->remaining)</span>

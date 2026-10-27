@@ -32,29 +32,43 @@
             </p>
         </div>
 
-        {{-- Kartu dekoratif --}}
+        {{-- Kartu pengingat (data dari database, hanya angka agregat) --}}
+        @php
+            $shortRupiah = fn (int $n): string => $n >= 1000000
+                ? 'Rp' . number_format($n / 1000000, 2, ',', '.') . ' jt'
+                : \App\Support\Rupiah::format($n);
+        @endphp
         <div class="rounded-3xl bg-white/10 p-6">
             <div class="flex items-start justify-between">
                 <div>
                     <p class="text-[10px] tracking-wide text-white/70">PIUTANG BULAN INI</p>
-                    <p class="mt-1 text-2xl">Rp24,45 jt</p>
+                    <p class="mt-1 text-2xl">{{ $shortRupiah($summary['receivable']) }}</p>
                 </div>
-                <span class="flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold">
-                    <x-icon name="trending-up" class="size-3" /> +8,4%
-                </span>
+                @if (! is_null($summary['trend']))
+                    <span class="flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[11px] font-semibold">
+                        <x-icon name="trending-up" class="size-3" /> {{ $summary['trend'] >= 0 ? '+' : '−' }}{{ number_format(abs($summary['trend']), 1, ',', '.') }}%
+                    </span>
+                @endif
             </div>
             <div class="mt-6 flex h-20 items-end gap-3">
-                @foreach ([40, 55, 45, 65, 52, 75, 62, 85] as $i => $h)
-                    <div class="flex-1 rounded-t-md {{ $i === 6 ? 'bg-brand-500' : 'bg-white/25' }}" style="height: {{ $h }}%"></div>
+                @foreach ($summary['bars'] as $bar)
+                    <div class="flex-1 rounded-t-md {{ $bar['active'] ? 'bg-brand-500' : 'bg-white/25' }}" style="height: {{ $bar['percent'] }}%" title="{{ $bar['label'] }}"></div>
                 @endforeach
             </div>
             <div class="mt-3 flex items-center gap-3 rounded-xl bg-white p-3 text-ink">
                 <span class="grid size-9 place-items-center rounded-lg bg-amber-100 text-amber-600"><x-icon name="clock" class="size-4" /></span>
                 <div class="flex-1 text-xs">
-                    <p class="font-semibold">4 kuitansi perlu perhatian</p>
-                    <p class="text-[10px] text-ink-soft">Rp20.850.000 belum diselesaikan</p>
+                    @if ($summary['attention_count'] > 0)
+                        <p class="font-semibold">{{ $summary['attention_count'] }} kuitansi perlu perhatian</p>
+                        <p class="text-[10px] text-ink-soft">{{ \App\Support\Rupiah::format($summary['attention_remaining']) }} belum diselesaikan</p>
+                    @else
+                        <p class="font-semibold">Tidak ada kuitansi yang perlu perhatian</p>
+                        <p class="text-[10px] text-ink-soft">Belum ada tagihan yang mendekati jatuh tempo</p>
+                    @endif
                 </div>
-                <span class="text-xs font-semibold text-brand-500">Lihat</span>
+                @if ($summary['attention_count'] > 0)
+                    <a href="{{ route('dashboard') }}" class="text-xs font-semibold text-brand-500">Lihat</a>
+                @endif
             </div>
         </div>
 

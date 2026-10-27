@@ -1516,6 +1516,11 @@
             });
         }
 
+        // Buka modal otomatis kalau datang dari menu "Kuitansi Baru" (?tambah=1)
+        if (new URLSearchParams(window.location.search).has('tambah')) {
+            openTambahModal();
+        }
+
         document.addEventListener('click', function(e) {
             if (!e.target.closest('.modal-custom-select')) {
                 document.querySelectorAll('.modal-custom-select.is-open').forEach(el => el.classList.remove('is-open'));

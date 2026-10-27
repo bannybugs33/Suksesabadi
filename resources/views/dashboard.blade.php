@@ -1115,14 +1115,14 @@
                     • Utang & Piutang
                 </a>
             </div>
-            <span class="menu-disabled" onclick="openTambahModal()">
+            <a href="{{ route('arsip-kuitansi.index') }}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="21 8 21 21 3 21 3 8"></polyline>
                     <rect x="1" y="3" width="22" height="5"></rect>
                     <line x1="10" y1="12" x2="14" y2="12"></line>
                 </svg>
                 Arsip Kuitansi
-            </span>
+            </a>
             <span class="menu-disabled" onclick="openTambahModal()">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -1596,6 +1596,11 @@
                     check.remove();
                 }
             });
+        }
+
+        // Buka modal otomatis kalau datang dari menu "Kuitansi Baru" (?tambah=1)
+        if (new URLSearchParams(window.location.search).has('tambah')) {
+            openTambahModal();
         }
 
         document.addEventListener('click', function(e) {

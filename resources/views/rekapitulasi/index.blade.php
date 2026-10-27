@@ -14,7 +14,7 @@
 
     body {
         margin: 0;
-        padding: 36px;
+        padding: 0;
         background: #f7f8fa;
         color: #292930;
         font-family: Arial, sans-serif;
@@ -28,7 +28,7 @@
         font-weight: 600;
     }
 
-    form {
+    form.rekap-filter-form {
         display: flex;
         align-items: center;
         flex-wrap: wrap;
@@ -161,119 +161,227 @@
             grid-template-columns: 1fr;
         }
     }
-    body {
-    padding: 0;
-}
-
+/* Sidebar */
 .sidebar {
     position: fixed;
     inset: 0 auto 0 0;
     width: 220px;
-    padding: 28px 16px;
+    padding: 24px 16px;
     background: #91283b;
     color: white;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    z-index: 100;
 }
 
 .brand {
-    padding: 0 12px;
-    font-size: 23px;
-    font-weight: 600;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
-.brand small {
+.brand-icon {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.brand-text {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.brand-text small {
     display: block;
-    margin-top: 4px;
-    font-size: 9px;
-    font-weight: 400;
-    letter-spacing: 1px;
+    margin-top: 3px;
+    font-size: 7.5px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    color: #fce7eb;
 }
 
 .menu-label {
-    margin: 36px 12px 12px;
+    margin: 28px 10px 10px;
     font-size: 10px;
     color: #f0c7cf;
+    letter-spacing: 0.5px;
+    font-weight: 700;
 }
 
 .sidebar-menu {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 4px;
 }
 
 .sidebar-menu a,
 .sidebar-menu span {
-    display: block;
-    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
     border-radius: 8px;
-    color: white;
-    font-size: 14px;
-}
-
-.sidebar-menu .menu-disabled {
-    color: #e8bcc5;
-}
-
-.sidebar-menu .menu-active {
-    background: #b3374f;
-    font-weight: 600;
+    color: #fce7eb;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.15s ease;
 }
 
 .sidebar-menu a:hover {
-    background: #a93249;
-    text-decoration: none;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
 }
 
+.sidebar-menu a.menu-active {
+    background: rgba(255, 255, 255, 0.16);
+    color: white;
+    font-weight: 600;
+}
+
+.menu-parent-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px 4px;
+    color: #fce7eb;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.menu-parent-link:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.menu-sub-link {
+    display: block;
+    padding: 4px 12px 6px 38px;
+    font-size: 12px;
+    color: #fce7eb;
+    text-decoration: none;
+    transition: color 0.15s ease;
+}
+
+.menu-sub-link:hover {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.sidebar-spacer {
+    flex: 1;
+    min-height: 24px;
+}
+
+/* Sidebar Sync Info Box */
+.sync-info-box {
+    background: rgba(0, 0, 0, 0.18);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+}
+
+.sync-info-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #f8d5dc;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.sync-dot {
+    width: 7px;
+    height: 7px;
+    background: #22c55e;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.sync-info-label {
+    font-size: 10px;
+    color: #e8a2af;
+}
+
+.sync-info-time {
+    font-size: 11px;
+    color: #ffffff;
+    font-weight: 600;
+    margin-top: 1px;
+}
+
+/* Sidebar User Profile */
 .sidebar-user {
     display: flex;
     align-items: center;
     gap: 10px;
-    margin-top: auto;
-    padding-top: 24px;
-    font-size: 12px;
-}
-
-.sidebar-user small {
-    display: block;
-    margin-top: 3px;
-    font-size: 10px;
-    color: #f0c7cf;
+    padding: 10px 6px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .avatar {
-    display: grid;
-    place-items: center;
-    flex-shrink: 0;
-    width: 34px;
-    height: 34px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    background: white;
-    color: #91283b;
-}
-
-.sidebar-logout-btn {
+    background: rgba(255, 255, 255, 0.22);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    width: 100%;
-    min-height: 34px;
-    margin-top: 14px;
-    padding: 6px 12px;
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
     color: white;
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.15s ease;
+    flex-shrink: 0;
 }
 
-.sidebar-logout-btn:hover {
-    background: rgba(0, 0, 0, 0.35);
+.sidebar-user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #ffffff;
+}
+
+.user-role {
+    font-size: 10.5px;
+    color: #f0c7cf;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.logout-icon-btn {
+    background: none;
+    border: none;
+    color: #fce7eb;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+.logout-icon-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .main-content {
@@ -641,13 +749,17 @@ form button[type="submit"]:hover {
     background: #782032;
 }
 
-form a {
+form.rekap-filter-form button[type="submit"]:hover {
+    background: #782032;
+}
+
+form.rekap-filter-form a {
     font-size: 13px;
     color: #717381;
     text-decoration: none;
 }
 
-form a:hover {
+form.rekap-filter-form a:hover {
     color: #91283b;
     text-decoration: underline;
 }
@@ -655,7 +767,7 @@ form a:hover {
 @include('partials.sidebar-styles')
 </head>
 <body>
-    @include('arsip-kuitansi._sidebar')
+    @include('_sidebar')
 
 <main class="main-content">
     <h1>Rekapitulasi Utang dan Piutang</h1>
@@ -667,7 +779,7 @@ form a:hover {
     </ul>
 @endif
 
-<form method="GET" action="{{ route('rekapitulasi.index') }}">
+<form method="GET" action="{{ route('rekapitulasi.index') }}" class="rekap-filter-form">
     <label for="periode">Periode:</label>
     <input
         type="month"

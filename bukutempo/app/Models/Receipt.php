@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Receipt extends Model
 {
     public const TYPE_RECEIVABLE = 'receivable';
+
     public const TYPE_PAYABLE = 'payable';
+
     public const STATUS_LUNAS = 'lunas';
 
     public const STATUS_LABELS = [
@@ -79,10 +81,10 @@ class Receipt extends Model
         $days = $this->days_left;
 
         return match (true) {
-            $days < 0 => 'Terlambat ' . abs($days) . ' hari',
+            $days < 0 => 'Terlambat '.abs($days).' hari',
             $days === 0 => 'Jatuh tempo hari ini',
             $days === 1 => 'Jatuh tempo besok',
-            default => 'Tempo ' . $days . ' hari lagi',
+            default => 'Tempo '.$days.' hari lagi',
         };
     }
 }

@@ -99,10 +99,12 @@ class DashboardTest extends TestCase
         $response->assertSee('Lihat detail');
         $response->assertSee('Lihat semua');
         $response->assertSee(route('jatuh-tempo.index'));
+        $response->assertSee(route('arsip-kuitansi.index'));
         $response->assertSee('Toko Makmur Jaya');
         $response->assertSee('PT Sumber Pangan');
         $response->assertSee('Warung Bu Sari');
         $response->assertSee('Kantin Melati');
         $response->assertSee('Tambah kuitansi');
+        $response->assertSee('Kuitansi Baru');
     }
 }

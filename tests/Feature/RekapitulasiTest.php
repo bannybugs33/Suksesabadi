@@ -21,6 +21,11 @@ class RekapitulasiTest extends TestCase
         $response->assertStatus(200);
         $response->assertSee('Rekapitulasi Utang dan Piutang');
         $response->assertSee('BukuTempo');
+        $response->assertSee(route('dashboard'));
+        $response->assertSee(route('jatuh-tempo.index'));
+        $response->assertSee(route('arsip-kuitansi.index'));
+        $response->assertSee(route('kuitansi.create'));
+        $response->assertSee(route('rekapitulasi.index'));
     }
 
     public function test_rekapitulasi_displays_kuitansi_and_calculated_totals(): void

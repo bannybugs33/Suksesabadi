@@ -15,7 +15,7 @@
             <h1 class="page-title">Arsip Kuitansi</h1>
             <p class="page-subtitle">Cari, periksa, dan kelola seluruh bukti transaksi utang-piutang toko.</p>
         </div>
-        <a href="{{ route('dashboard') }}" class="btn btn-primary">+ Tambah kuitansi</a>
+        <a href="{{ route('kuitansi.create') }}" class="btn btn-primary">+ Tambah kuitansi</a>
     </div>
 
     @if (session('status'))

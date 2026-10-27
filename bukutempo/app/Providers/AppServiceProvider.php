@@ -18,7 +18,6 @@ class AppServiceProvider extends ServiceProvider
         Carbon::setLocale(config('app.locale'));
 
         // Pemakaian di Blade: @rupiah($angka)
-        Blade::directive('rupiah', fn ($expression) =>
-            '<?php echo \App\Support\Rupiah::format(' . $expression . '); ?>');
+        Blade::directive('rupiah', fn ($expression) => '<?php echo \App\Support\Rupiah::format('.$expression.'); ?>');
     }
 }

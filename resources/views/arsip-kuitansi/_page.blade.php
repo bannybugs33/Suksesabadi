@@ -6,7 +6,27 @@
     .card { background: #fff; border: 1px solid #ececf0; border-radius: 10px; padding: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.05); margin-bottom: 14px; }
     .btn { display: inline-block; border: 1px solid #e0e0e6; background: #fff; color: #292930; border-radius: 6px; padding: 8px 14px; font-size: 12px; cursor: pointer; text-decoration: none; }
     .btn-primary { background: #c93548; border-color: #c93548; color: #fff; font-weight: 600; }
-    .field, .field-select { border: 1px solid #e0e0e6; border-radius: 6px; padding: 9px 10px; font-size: 12px; background: #fff; width: 100%; }
+    .field { border: 1px solid #d8dbe2; border-radius: 8px; padding: 9px 12px; font-size: 12px; background: #fff; width: 100%; transition: all 0.15s ease; }
+    .field:focus { outline: none; border-color: #91283b; box-shadow: 0 0 0 3px rgba(145, 40, 59, 0.1); }
+    select.field, select.field-select {
+        border: 1px solid #d8dbe2;
+        border-radius: 8px;
+        padding: 9px 32px 9px 12px;
+        font-size: 12px;
+        background-color: #ffffff;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23555865' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 14px 14px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        color: #292930;
+        transition: all 0.15s ease;
+    }
+    select.field:hover, select.field-select:hover { border-color: #b0b4be; background-color: #fafafc; }
+    select.field:focus, select.field-select:focus { outline: none; border-color: #91283b; box-shadow: 0 0 0 3px rgba(145, 40, 59, 0.1); }
     .filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 10px; }
     .filter-row .field-select { width: auto; }
     .filter-label { color: #777; font-size: 11px; }

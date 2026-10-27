@@ -15,8 +15,8 @@
         <p class="menu-label">MENU UTAMA</p>
 
         <nav class="sidebar-menu" aria-label="Menu utama">
-            <div class="menu-group-active">
-                <a href="{{ route('dashboard') }}" class="menu-parent-link" style="color: #fce7eb; font-weight: 500;">
+            <div>
+                <a href="{{ route('dashboard') }}" class="menu-parent-link">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="7" height="7"></rect>
                         <rect x="14" y="3" width="7" height="7"></rect>
@@ -30,7 +30,7 @@
                 </a>
             </div>
 
-            <a href="{{ route('arsip-kuitansi.index') }}" class="menu-active">
+            <a href="{{ route('arsip-kuitansi.index') }}" class="menu-active" aria-current="page">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="21 8 21 21 3 21 3 8"></polyline>
                     <rect x="1" y="3" width="22" height="5"></rect>
@@ -38,7 +38,7 @@
                 </svg>
                 Arsip Kuitansi
             </a>
-            <a href="{{ route('dashboard') }}" class="menu-disabled" style="cursor: pointer;">
+            <a href="{{ route('dashboard', ['tambah' => 1]) }}">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                     <polyline points="14 2 14 8 20 8"></polyline>

@@ -23,7 +23,7 @@ class DemoSeeder extends Seeder
 
         // Pembuat kuitansi; tanggal jatuh tempo dihitung relatif terhadap hari ini
         $make = function (string $code, string $party, string $partyType, string $type,
-                          int $total, int $paid, int $dueOffset, string $status): Receipt {
+            int $total, int $paid, int $dueOffset, string $status): Receipt {
             $p = Party::firstOrCreate(['name' => $party], ['type' => $partyType]);
 
             return Receipt::create([

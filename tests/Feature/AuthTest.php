@@ -17,9 +17,26 @@ class AuthTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertSee('BukuTempo');
-        $response->assertSee('Masuk ke Sistem');
-        $response->assertSee('Alamat Email');
-        $response->assertSee('Kata Sandi');
+        $response->assertSee('Selamat datang kembali');
+        $response->assertSee('Username');
+        $response->assertSee('Password');
+        $response->assertSee('Utang–piutang rapi', false);
+    }
+
+    public function test_users_can_authenticate_using_username(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'andi@suksesabadi.com',
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this->post('/login', [
+            'username' => 'andi.owner',
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticated();
+        $response->assertRedirect(route('dashboard'));
     }
 
     public function test_users_can_authenticate_using_the_login_screen(): void
@@ -77,6 +94,22 @@ class AuthTest extends TestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)->get('/login');
+
+        $response->assertRedirect(route('dashboard'));
+    }
+
+    public function test_root_redirects_to_login_for_guests(): void
+    {
+        $response = $this->get('/');
+
+        $response->assertRedirect(route('login'));
+    }
+
+    public function test_root_redirects_to_dashboard_for_authenticated_users(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/');
 
         $response->assertRedirect(route('dashboard'));
     }

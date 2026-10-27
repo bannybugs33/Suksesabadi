@@ -72,8 +72,7 @@
         font-weight: 700;
         color: #3a3d4e;
     }
-    .pay-field input,
-    .pay-field select {
+    .pay-field input {
         width: 100%;
         box-sizing: border-box;
         padding: 10px 12px;
@@ -82,9 +81,37 @@
         font-size: 14px;
         font-family: inherit;
         background: #fff;
+        transition: all 0.15s ease;
+    }
+    .pay-field select {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 36px 10px 12px;
+        border: 1px solid #d9dbe3;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+        background-color: #fff;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23555865' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 12px center;
+        background-size: 14px 14px;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        cursor: pointer;
+        transition: all 0.15s ease;
+    }
+    .pay-field input:hover,
+    .pay-field select:hover {
+        border-color: #b0b4be;
     }
     .pay-field input:focus,
-    .pay-field select:focus { outline: none; border-color: #91283b; }
+    .pay-field select:focus {
+        outline: none;
+        border-color: #91283b;
+        box-shadow: 0 0 0 3px rgba(145, 40, 59, 0.1);
+    }
     .pay-row { display: flex; gap: 8px; }
     .pay-row input { flex: 1; }
     .pay-btn-sisa {

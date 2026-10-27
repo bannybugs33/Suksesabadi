@@ -4,6 +4,7 @@ use App\Http\Controllers\ArsipKuitansiController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\JatuhTempoController;
+use App\Http\Controllers\KuitansiController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RekapitulasiController;
 use Illuminate\Support\Facades\Auth;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return Auth::check()
         ? redirect()->route('dashboard')
-        : view('welcome');
+        : redirect()->route('login');
 });
 
 Route::middleware('guest')->group(function () {
@@ -27,5 +28,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/jatuh-tempo/{kuitansi}/pembayaran', [PembayaranController::class, 'store'])->name('pembayaran.store');
     Route::get('/arsip-kuitansi', [ArsipKuitansiController::class, 'index'])->name('arsip-kuitansi.index');
     Route::get('/arsip-kuitansi/{kuitansi}', [ArsipKuitansiController::class, 'show'])->name('arsip-kuitansi.show');
+    Route::get('/kuitansi/baru', [KuitansiController::class, 'create'])->name('kuitansi.create');
+    Route::post('/kuitansi/baru', [KuitansiController::class, 'store'])->name('kuitansi.store');
     Route::get('/rekapitulasi', [RekapitulasiController::class, 'index'])->name('rekapitulasi.index');
 });

@@ -15,7 +15,7 @@
             <h1 class="page-title">Arsip Kuitansi</h1>
             <p class="page-subtitle">Cari, periksa, dan kelola seluruh bukti transaksi utang-piutang toko.</p>
         </div>
-        <a href="{{ route('kuitansi.create') }}" class="btn btn-primary">+ Tambah kuitansi</a>
+        <a href="{{ route('dashboard', ['tambah' => 1]) }}" class="btn btn-primary">+ Tambah kuitansi</a>
     </div>
 
     @if (session('status'))
@@ -83,18 +83,6 @@
                 <span>Menampilkan {{ $kuitansi->firstItem() }}-{{ $kuitansi->lastItem() }} dari {{ $kuitansi->total() }} kuitansi</span>
                 <span>
                     @if ($kuitansi->onFirstPage()) @else <a href="{{ $kuitansi->previousPageUrl() }}">‹</a> @endif
-                    @foreach ($kuitansi->getUrlRange(1, $kuitansi->lastPage()) as $nomor => $url)
-                        @if ($nomor === $kuitansi->currentPage())<span class="cur">{{ $nomor }}</span>@else<a href="{{ $url }}">{{ $nomor }}</a>@endif
-                    @endforeach
-                    @if ($kuitansi->hasMorePages())<a href="{{ $kuitansi->nextPageUrl() }}">›</a>@endif
-                </span>
-            </div>
-        </div>
-    @endif
-</main>
-</body>
-</html>
-        @if ($kuitansi->onFirstPage()) @else <a href="{{ $kuitansi->previousPageUrl() }}">‹</a> @endif
                     @foreach ($kuitansi->getUrlRange(1, $kuitansi->lastPage()) as $nomor => $url)
                         @if ($nomor === $kuitansi->currentPage())<span class="cur">{{ $nomor }}</span>@else<a href="{{ $url }}">{{ $nomor }}</a>@endif
                     @endforeach

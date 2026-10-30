@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          tools: composer:v2
+          coverage: none
+      - run: cp .env.example .env
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Cek gaya kode (Laravel Pint)
+        run: ./vendor/bin/pint --test
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, zip
+          tools: composer:v2
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: cp .env.example .env
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: php artisan key:generate
+      - run: npm ci
+      - run: npm run build
+      - name: Jalankan test
+        run: php artisan test
+
+  docker:
+    name: docker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: suksesabadi:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Smoke test (container harus bisa menyajikan halaman login)
+        run: |
+          docker run -d --name app -p 8080:80 \
+            -e APP_KEY="base64:$(openssl rand -base64 32)" \
+            -e APP_ENV=production -e APP_DEBUG=false \
+            -e DB_CONNECTION=sqlite -e DB_DATABASE=/data/database.sqlite \
+            -e SESSION_DRIVER=database -e CACHE_STORE=database \
+            suksesabadi:ci
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8080/login > /dev/null; then
+              echo "Container sehat"; exit 0
+            fi
+            sleep 2
+          done
+          echo "Container gagal merespons. Log:"
+          docker logs app
+          exit 1

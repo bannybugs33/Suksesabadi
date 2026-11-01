@@ -7,6 +7,7 @@ use App\Http\Controllers\JatuhTempoController;
 use App\Http\Controllers\KuitansiController;
 use App\Http\Controllers\PembayaranController;
 use App\Http\Controllers\RekapitulasiController;
+use App\Http\Middleware\CegahCacheHalamanPrivat;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -21,13 +22,15 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
 });
 
-Route::middleware('auth')->group(function () {
+// Semua halaman data toko dan foto arsip hanya untuk owner yang sudah login.
+Route::middleware(['auth', CegahCacheHalamanPrivat::class])->group(function () {
     Route::post('/logout', [AuthController::class, 'destroy'])->name('logout');
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/jatuh-tempo', [JatuhTempoController::class, 'index'])->name('jatuh-tempo.index');
     Route::post('/jatuh-tempo/{kuitansi}/pembayaran', [PembayaranController::class, 'store'])->name('pembayaran.store');
     Route::get('/arsip-kuitansi', [ArsipKuitansiController::class, 'index'])->name('arsip-kuitansi.index');
     Route::get('/arsip-kuitansi/{kuitansi}', [ArsipKuitansiController::class, 'show'])->name('arsip-kuitansi.show');
+    Route::get('/arsip-kuitansi/{kuitansi}/bukti', [ArsipKuitansiController::class, 'bukti'])->name('arsip-kuitansi.bukti');
     Route::get('/kuitansi/baru', [KuitansiController::class, 'create'])->name('kuitansi.create');
     Route::post('/kuitansi/baru', [KuitansiController::class, 'store'])->name('kuitansi.store');
     Route::get('/rekapitulasi', [RekapitulasiController::class, 'index'])->name('rekapitulasi.index');

@@ -14,23 +14,17 @@ use Illuminate\View\View;
 
 class AuthController extends Controller
 {
+    private const PESAN_AKUN_SALAH = 'Username atau password salah. Periksa kembali isian Anda lalu coba lagi.';
+
     /**
      * Tampilkan halaman login.
+     *
+     * Halaman ini hanya berisi formulir masuk. Data toko (nominal, kuitansi,
+     * pengingat) sengaja tidak dikirim ke view karena pengunjung belum login.
      */
     public function create(): View
     {
-        // Hanya angka agregat toko (tanpa nama pihak) karena pengunjung belum login.
-        // rescue(): jika perhitungan gagal (mis. database belum dimigrasi), halaman login tetap tampil.
-        return view('auth.login', [
-            'pengingat' => rescue(
-                fn () => Kuitansi::ringkasanPengingat(),
-                ['jumlah' => 0, 'terlambat' => 0, 'sisa' => 0.0]
-            ),
-            'grafikPiutang' => rescue(
-                fn () => Kuitansi::grafikPiutangBulanan(),
-                ['bars' => [], 'total' => 0.0, 'perubahan' => null]
-            ),
-        ]);
+        return view('auth.login');
     }
 
     /**
@@ -44,6 +38,8 @@ class AuthController extends Controller
 
         $request->validate([
             'password' => ['required', 'string'],
+        ], [
+            'password.required' => 'Password wajib diisi.',
         ]);
 
         if (empty($loginInput)) {
@@ -91,16 +87,18 @@ class AuthController extends Controller
             RateLimiter::hit($throttleKey, 60);
 
             throw ValidationException::withMessages([
-                'email' => 'Username atau password yang Anda masukkan salah. Silakan periksa kembali.',
-                'username' => 'Username atau password yang Anda masukkan salah. Silakan periksa kembali.',
+                'email' => self::PESAN_AKUN_SALAH,
+                'username' => self::PESAN_AKUN_SALAH,
             ]);
         }
 
         RateLimiter::clear($throttleKey);
         $request->session()->regenerate();
 
-        // Dibaca sekali oleh dashboard untuk menampilkan notifikasi pengingat jatuh tempo.
-        return redirect()->intended(route('dashboard'))
+        // Setelah masuk, owner selalu diarahkan ke Dashboard (bukan ke URL terakhir yang dicoba
+        // sebagai tamu, mis. alamat foto). Ringkasan di bawah dibaca sekali oleh Dashboard
+        // untuk menampilkan notifikasi pengingat jatuh tempo.
+        return redirect()->route('dashboard')
             ->with('pengingat_login', rescue(
                 fn () => Kuitansi::ringkasanPengingat(Auth::id()),
                 ['jumlah' => 0, 'terlambat' => 0, 'sisa' => 0.0]

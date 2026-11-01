@@ -72,11 +72,11 @@ class KuitansiController extends Controller
             $nomorKuitansi = $baseNomor.'-'.$counter;
         }
 
-        // Simpan file bukti kuitansi jika ada
+        // Simpan file bukti kuitansi jika ada. Disimpan di disk privat (tanpa URL publik);
+        // dibuka lewat route arsip-kuitansi.bukti yang mewajibkan login.
         $buktiPath = null;
         if ($request->hasFile('bukti')) {
-            $storedFile = $request->file('bukti')->store('kuitansi', 'public');
-            $buktiPath = 'storage/'.$storedFile;
+            $buktiPath = $request->file('bukti')->store('kuitansi', Kuitansi::DISK_BUKTI);
         }
 
         // Tentukan status pembayaran akhir

@@ -136,7 +136,7 @@ class JatuhTempoTest extends TestCase
         $responseSelected->assertSee('KWT-240918');
         $responseSelected->assertSee('Warung Bu Sari');
         $responseSelected->assertSee('Bukti kuitansi');
-        $responseSelected->assertSee('kuitansi-warung-bu-sari.jpg');
+        $responseSelected->assertSee('kuitansi-warung-bu-sari.svg');
         $responseSelected->assertSee('Riwayat pembayaran');
         $responseSelected->assertSee('Transfer bank');
         $responseSelected->assertSee('Tunai - pembayaran awal');
@@ -208,6 +208,8 @@ class JatuhTempoTest extends TestCase
         $response->assertSee('Detail transaksi');
         $response->assertSee('1 lampiran');
         $response->assertSee('struk-pembelian-makmur-999.png');
-        $response->assertSee('storage/kuitansi/struk-pembelian-makmur-999.png');
+        // URL foto mengarah ke route terlindungi, bukan ke folder publik.
+        $response->assertSee("/arsip-kuitansi/{$tokoMakmur->id}/bukti");
+        $response->assertDontSee('storage/kuitansi/');
     }
 }

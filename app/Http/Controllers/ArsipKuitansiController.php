@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Kuitansi;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ArsipKuitansiController extends Controller
 {
@@ -64,5 +66,31 @@ class ArsipKuitansiController extends Controller
         $sisa = max((float) $kuitansi->nominal_transaksi - $terbayar, 0);
 
         return view('arsip-kuitansi.show', compact('kuitansi', 'terbayar', 'sisa'));
+    }
+
+    /**
+     * Tampilkan foto/berkas bukti kuitansi.
+     *
+     * Berkas disimpan di disk privat (tanpa URL publik), jadi satu-satunya jalan untuk
+     * membukanya adalah route ini: wajib login dan hanya untuk pemilik kuitansi.
+     */
+    public function bukti(Kuitansi $kuitansi): StreamedResponse
+    {
+        abort_unless($kuitansi->user_id === Auth::id(), 403);
+
+        $lokasi = Kuitansi::lokasiBukti($kuitansi->bukti_kuitansi);
+        abort_if($lokasi === null, 404);
+
+        $headers = [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
+        ];
+
+        // SVG bisa memuat skrip jika dibuka langsung; kunci agar tidak bisa dieksekusi.
+        if (strtolower(pathinfo($lokasi['path'], PATHINFO_EXTENSION)) === 'svg') {
+            $headers['Content-Security-Policy'] = "default-src 'none'; style-src 'unsafe-inline'";
+        }
+
+        return Storage::disk($lokasi['disk'])->response($lokasi['path'], basename($lokasi['path']), $headers);
     }
 }

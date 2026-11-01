@@ -157,9 +157,72 @@ class Kuitansi extends Model
     }
 
     /**
-     * Memproses dan mengekstrak info gambar bukti kuitansi secara dinamis
-     * dari penyimpanan lokal, public storage, asset public, maupun URL eksternal.
+     * Disk privat tempat foto/berkas bukti kuitansi disimpan (storage/app/private).
+     * Berkas di disk ini tidak punya URL publik; hanya bisa dibuka lewat route
+     * arsip-kuitansi.bukti yang mewajibkan login.
+     */
+    public const DISK_BUKTI = 'local';
+
+    /**
+     * Cari berkas bukti di penyimpanan server.
      *
+     * Urutan pencarian: disk privat (lokasi baru), lalu disk public (data lama yang
+     * disimpan sebagai "storage/kuitansi/..."), lalu nama berkas saja di folder kuitansi.
+     *
+     * @return array{disk: string, path: string}|null null jika bukan berkas lokal atau tidak ditemukan
+     */
+    public static function lokasiBukti(?string $bukti): ?array
+    {
+        $nilai = trim((string) $bukti);
+
+        if ($nilai === '' || self::adalahUrlLuar($nilai) || str_contains($nilai, '..') || str_contains($nilai, "\0")) {
+            return null;
+        }
+
+        $relatif = ltrim(str_starts_with($nilai, 'storage/') ? substr($nilai, 8) : $nilai, '/');
+
+        $kandidat = [
+            [self::DISK_BUKTI, $relatif],
+            ['public', $relatif],
+            [self::DISK_BUKTI, 'kuitansi/'.basename($relatif)],
+        ];
+
+        foreach ($kandidat as [$disk, $path]) {
+            if (Storage::disk($disk)->exists($path)) {
+                return ['disk' => $disk, 'path' => $path];
+            }
+        }
+
+        return null;
+    }
+
+    private static function adalahUrlLuar(string $nilai): bool
+    {
+        return str_starts_with($nilai, 'http://')
+            || str_starts_with($nilai, 'https://')
+            || str_starts_with($nilai, 'data:');
+    }
+
+    /**
+     * Gambar netral (tanpa data toko) yang dipakai saat foto tidak dapat dimuat.
+     */
+    public static function gambarPengganti(): string
+    {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300">'
+            .'<rect width="400" height="300" fill="#eeede9"/>'
+            .'<text x="200" y="155" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#6b6b86">'
+            .'Foto tidak dapat ditampilkan</text></svg>';
+
+        return 'data:image/svg+xml;base64,'.base64_encode($svg);
+    }
+
+    /**
+     * Memproses info bukti kuitansi untuk ditampilkan di halaman.
+     *
+     * Berkas yang tersimpan di server TIDAK diberi URL publik. URL-nya mengarah ke route
+     * terlindungi (arsip-kuitansi.bukti) sehingga hanya owner yang sudah login yang bisa membuka foto.
+     *
+     * @param  int|null  $kuitansiId  id kuitansi pemilik bukti (dipakai untuk membentuk URL terlindungi)
      * @return array{
      *     has_bukti: bool,
      *     bukti_kuitansi: ?string,
@@ -169,7 +232,7 @@ class Kuitansi extends Model
      *     fallback_bukti_url: ?string
      * }
      */
-    public static function resolveBuktiInfo(?string $bukti): array
+    public static function resolveBuktiInfo(?string $bukti, ?int $kuitansiId = null): array
     {
         $trimmed = trim((string) $bukti);
         if ($trimmed === '') {
@@ -183,38 +246,19 @@ class Kuitansi extends Model
             ];
         }
 
-        $url = null;
-        $sizeBytes = null;
         $fileName = basename(parse_url($trimmed, PHP_URL_PATH) ?: $trimmed);
         $extension = strtoupper(pathinfo($fileName, PATHINFO_EXTENSION) ?: 'JPG');
+        $sizeBytes = null;
 
-        if (str_starts_with($trimmed, 'http://') || str_starts_with($trimmed, 'https://') || str_starts_with($trimmed, 'data:')) {
+        if (self::adalahUrlLuar($trimmed)) {
             $url = $trimmed;
-        } elseif (str_starts_with($trimmed, 'storage/')) {
-            $relativePath = substr($trimmed, 8);
-            if (Storage::disk('public')->exists($relativePath)) {
-                $sizeBytes = Storage::disk('public')->size($relativePath);
-            } elseif (file_exists(public_path($trimmed))) {
-                $sizeBytes = filesize(public_path($trimmed));
-            }
-            $url = asset($trimmed);
-        } elseif (Storage::disk('public')->exists($trimmed)) {
-            $sizeBytes = Storage::disk('public')->size($trimmed);
-            $url = Storage::disk('public')->url($trimmed);
-        } elseif (file_exists(public_path('images/'.$trimmed))) {
-            $sizeBytes = filesize(public_path('images/'.$trimmed));
-            $url = asset('images/'.$trimmed);
-        } elseif (file_exists(public_path('images/'.pathinfo($trimmed, PATHINFO_FILENAME).'.svg'))) {
-            $svgFile = pathinfo($trimmed, PATHINFO_FILENAME).'.svg';
-            $sizeBytes = filesize(public_path('images/'.$svgFile));
-            $url = asset('images/'.$svgFile);
-            $extension = 'SVG';
-        } elseif (file_exists(public_path($trimmed))) {
-            $sizeBytes = filesize(public_path($trimmed));
-            $url = asset($trimmed);
         } else {
-            // Default ke public storage URL untuk file baru yang disimpan di disk public
-            $url = Storage::disk('public')->url($trimmed);
+            $lokasi = self::lokasiBukti($trimmed);
+            if ($lokasi !== null) {
+                $sizeBytes = Storage::disk($lokasi['disk'])->size($lokasi['path']);
+            }
+
+            $url = $kuitansiId !== null ? route('arsip-kuitansi.bukti', $kuitansiId) : null;
         }
 
         $meta = $extension;
@@ -234,7 +278,7 @@ class Kuitansi extends Model
             'bukti_kuitansi_name' => $fileName,
             'bukti_kuitansi_meta' => $meta,
             'bukti_kuitansi_url' => $url,
-            'fallback_bukti_url' => asset('images/kuitansi-warung-bu-sari.svg'),
+            'fallback_bukti_url' => self::gambarPengganti(),
         ];
     }
 
@@ -252,7 +296,7 @@ class Kuitansi extends Model
      */
     public function getBuktiInfoAttribute(): array
     {
-        return self::resolveBuktiInfo($this->bukti_kuitansi);
+        return self::resolveBuktiInfo($this->bukti_kuitansi, $this->id);
     }
 
     public function getBuktiUrlAttribute(): ?string

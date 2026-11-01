@@ -130,10 +130,11 @@ class KuitansiBaruTest extends TestCase
 
     public function test_user_can_upload_kuitansi_receipt_file(): void
     {
+        Storage::fake('local');
         Storage::fake('public');
 
         $user = User::factory()->create();
-        $file = UploadedFile::fake()->image('struk_pembelian.jpg', 600, 800);
+        $file = UploadedFile::fake()->create('struk_pembelian.jpg', 100, 'image/jpeg');
 
         $response = $this->actingAs($user)->post('/kuitansi/baru', [
             'tanggal_kuitansi' => '2026-09-29',
@@ -149,11 +150,10 @@ class KuitansiBaruTest extends TestCase
         $this->assertNotNull($kuitansi);
         $this->assertNotNull($kuitansi->bukti_kuitansi);
 
-        // Path should start with storage/kuitansi/
-        $this->assertStringStartsWith('storage/kuitansi/', $kuitansi->bukti_kuitansi);
-
-        $relativePath = str_replace('storage/', '', $kuitansi->bukti_kuitansi);
-        Storage::disk('public')->assertExists($relativePath);
+        // Foto disimpan di disk privat (tanpa URL publik), bukan di folder public.
+        $this->assertStringStartsWith('kuitansi/', $kuitansi->bukti_kuitansi);
+        Storage::disk('local')->assertExists($kuitansi->bukti_kuitansi);
+        Storage::disk('public')->assertMissing($kuitansi->bukti_kuitansi);
 
         $response->assertRedirect(route('arsip-kuitansi.show', $kuitansi->id));
     }

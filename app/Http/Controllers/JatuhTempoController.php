@@ -229,7 +229,7 @@ class JatuhTempoController extends Controller
         $item->tempo_code = $tempoCode;
         $item->role_pihak_display = $item->role_pihak ?? ($item->jenis === 'piutang' ? 'Pelanggan berutang kepada toko' : 'Supplier harus dibayar toko');
 
-        $buktiInfo = Kuitansi::resolveBuktiInfo($item->bukti_kuitansi ?? null);
+        $buktiInfo = Kuitansi::resolveBuktiInfo($item->bukti_kuitansi ?? null, $item->id ?? null);
         $item->has_bukti = $buktiInfo['has_bukti'];
         $item->bukti_kuitansi_name = $buktiInfo['bukti_kuitansi_name'];
         $item->bukti_kuitansi_meta = $buktiInfo['bukti_kuitansi_meta'];

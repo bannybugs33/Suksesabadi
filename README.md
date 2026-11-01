@@ -83,11 +83,15 @@ Inisialisasi tabel dan data awal operasional toko:
 php artisan migrate --seed
 ```
 
-### 5. Hubungkan Direktori Penyimpanan Publik
-Wajib dijalankan agar berkas bukti kuitansi yang diunggah ke storage dapat diakses via web:
+### 5. Penyimpanan Foto Kuitansi (Privat)
+Foto/berkas bukti kuitansi disimpan di `storage/app/private/kuitansi/` dan **tidak punya URL publik**.
+Foto hanya bisa dibuka lewat aplikasi oleh owner yang sudah login, jadi **tidak perlu** menjalankan `php artisan storage:link`.
+
+Jika sebelumnya sudah ada foto lama yang tersimpan di folder publik (`storage/kuitansi/...`), pindahkan ke penyimpanan privat dengan:
 ```bash
-php artisan storage:link
+php artisan bukti:amankan
 ```
+(Container Docker menjalankan perintah ini otomatis saat start.)
 
 ### 6. Pasang Dependensi Frontend dan Build Aset
 ```bash
@@ -170,9 +174,7 @@ Suksesabadi/
 ├── database/
 │   ├── migrations/            # Skema tabel database
 │   └── seeders/               # Data awal untuk pengujian dan demo
-├── public/
-│   ├── images/                # Aset gambar statis
-│   └── storage/               # Symlink ke storage/app/public untuk file upload
+├── public/                    # Hanya aset web (tidak ada foto kuitansi di sini)
 ├── resources/
 │   └── views/
 │       ├── auth/              # Tampilan halaman login
@@ -182,7 +184,7 @@ Suksesabadi/
 ├── routes/
 │   └── web.php                # Rute aplikasi web
 ├── storage/
-│   └── app/public/            # Penyimpanan dokumen dan bukti kuitansi
+│   └── app/private/           # Foto bukti kuitansi (privat, hanya lewat login)
 └── tests/
     └── Feature/               # Test suite PHPUnit untuk fitur aplikasi
 ```

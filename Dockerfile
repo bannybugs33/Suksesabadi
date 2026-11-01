@@ -35,8 +35,7 @@ COPY --from=assets /app/public/build ./public/build
 
 RUN composer dump-autoload --optimize --no-dev --no-scripts \
     && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views \
-                storage/logs storage/app/public bootstrap/cache /data \
-    && ln -sfn /var/www/html/storage/app/public /var/www/html/public/storage \
+                storage/logs storage/app/private bootstrap/cache /data \
     && chown -R www-data:www-data storage bootstrap/cache /data
 
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh

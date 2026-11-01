@@ -83,6 +83,18 @@ class AuthTest extends TestCase
         $response->assertSessionHas('status', 'Anda telah berhasil keluar.');
     }
 
+    public function test_after_logout_owner_can_no_longer_open_protected_pages(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/dashboard')->assertOk();
+
+        $this->post('/logout')->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->get('/dashboard')->assertRedirect(route('login'));
+    }
+
     public function test_unauthenticated_users_are_redirected_to_login_when_accessing_rekapitulasi(): void
     {
         $response = $this->get('/rekapitulasi');
@@ -132,25 +144,92 @@ class AuthTest extends TestCase
         $response->assertRedirect(route('dashboard'));
     }
 
-    public function test_login_screen_shows_due_date_reminder_summary(): void
+    public function test_login_screen_only_shows_the_login_form_without_store_data(): void
     {
         $this->seed(DatabaseSeeder::class);
 
         $response = $this->get('/login');
 
         $response->assertStatus(200);
-        $response->assertSee('PIUTANG BULAN INI');
-        $response->assertSee('4 kuitansi perlu perhatian');
-        $response->assertSee('Rp20.850.000 belum diselesaikan');
+        $response->assertSee('Selamat datang kembali');
+        $response->assertDontSee('PIUTANG');
+        $response->assertDontSee('perlu perhatian');
+        $response->assertDontSee('belum diselesaikan');
+        $response->assertDontSee('Rp');
         $response->assertDontSee('Toko Makmur Jaya');
+        $response->assertDontSee('Warung Bu Sari');
+        $response->assertDontSee('Kantin Melati');
     }
 
-    public function test_login_screen_shows_safe_state_when_no_reminders(): void
+    public function test_login_screen_does_not_prefill_credentials(): void
     {
         $response = $this->get('/login');
 
         $response->assertStatus(200);
-        $response->assertSee('Tidak ada kuitansi yang perlu perhatian');
+        $response->assertDontSee('andi.owner');
+        $response->assertDontSee('value="password"', false);
+    }
+
+    public function test_wrong_credentials_show_a_message_asking_owner_to_fix_the_input(): void
+    {
+        User::factory()->create([
+            'email' => 'andi@suksesabadi.com',
+            'password' => Hash::make('password'),
+        ]);
+
+        $response = $this->followingRedirects()->from('/login')->post('/login', [
+            'username' => 'andi.owner',
+            'password' => 'salah-total',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSee('Periksa kembali isian Anda');
+        $response->assertSee('Selamat datang kembali');
+    }
+
+    public function test_empty_password_shows_indonesian_message(): void
+    {
+        $response = $this->from('/login')->post('/login', [
+            'username' => 'andi.owner',
+            'password' => '',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors(['password' => 'Password wajib diisi.']);
+    }
+
+    public function test_login_is_throttled_after_five_failed_attempts(): void
+    {
+        User::factory()->create([
+            'email' => 'andi@suksesabadi.com',
+            'password' => Hash::make('password'),
+        ]);
+
+        foreach (range(1, 5) as $i) {
+            $this->from('/login')->post('/login', ['username' => 'andi.owner', 'password' => 'salah']);
+        }
+
+        // Percobaan ke-6 diblokir walaupun password-nya benar.
+        $response = $this->from('/login')->post('/login', [
+            'username' => 'andi.owner',
+            'password' => 'password',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors('email');
+        $this->assertStringContainsString('Terlalu banyak percobaan', session('errors')->first('email'));
+    }
+
+    public function test_login_always_lands_on_dashboard_even_after_opening_a_protected_url(): void
+    {
+        $this->seed(DatabaseSeeder::class);
+
+        $this->get('/arsip-kuitansi/3/bukti')->assertRedirect(route('login'));
+
+        $this->post('/login', [
+            'username' => 'andi.owner',
+            'password' => 'password',
+        ])->assertRedirect(route('dashboard'));
     }
 
     public function test_successful_login_flashes_reminder_summary_for_dashboard(): void

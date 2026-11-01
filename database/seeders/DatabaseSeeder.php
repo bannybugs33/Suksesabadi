@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,6 +22,12 @@ class DatabaseSeeder extends Seeder
         $this->call(UserSeeder::class);
 
         $user = User::query()->findOrFail(1);
+
+        // Foto demo disimpan di disk privat (tanpa URL publik), sama seperti foto yang diunggah owner.
+        Storage::disk(Kuitansi::DISK_BUKTI)->put(
+            'kuitansi/kuitansi-warung-bu-sari.svg',
+            file_get_contents(database_path('seeders/files/kuitansi-warung-bu-sari.svg'))
+        );
 
         $ref = Carbon::today();
 
@@ -67,7 +74,7 @@ class DatabaseSeeder extends Seeder
                 'tanggal_kuitansi' => $ref->copy()->subDays(11)->format('Y-m-d'),
                 'tanggal_jatuh_tempo' => $ref->copy()->subDays(1)->format('Y-m-d'),
                 'keterangan' => 'Pembelian 25 dus minyak goreng kemasan 1 liter. Pembayaran disepakati dalam dua tahap.',
-                'bukti_kuitansi' => 'kuitansi-warung-bu-sari.jpg',
+                'bukti_kuitansi' => 'kuitansi/kuitansi-warung-bu-sari.svg',
                 'pembayaran' => [
                     [
                         'nominal' => 3000000,

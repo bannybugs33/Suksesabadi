@@ -11,7 +11,7 @@ DB_FILE="${DB_DATABASE:-/data/database.sqlite}"
 
 # Siapkan folder & izin (volume Docker baru biasanya dimiliki root)
 mkdir -p /data storage/framework/cache storage/framework/sessions storage/framework/views \
-         storage/logs storage/app/public bootstrap/cache
+         storage/logs storage/app/private bootstrap/cache
 if [ "${DB_CONNECTION:-sqlite}" = "sqlite" ]; then
   touch "$DB_FILE"
 fi
@@ -24,6 +24,9 @@ artisan package:discover --ansi
 if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
   artisan migrate --force
 fi
+
+# Pindahkan foto kuitansi lama (folder publik) ke penyimpanan privat. Aman dijalankan berulang.
+artisan bukti:amankan || echo "PERINGATAN: bukti:amankan gagal, periksa log." >&2
 
 # Jangan aktifkan di produksi nyata: seeder membuat akun dengan password "password"
 if [ "${RUN_SEED:-false}" = "true" ]; then

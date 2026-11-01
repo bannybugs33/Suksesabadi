@@ -1448,14 +1448,14 @@
                     <span class="filter-item-label">Rentang pengingat</span>
                     <div class="detail-select-box" onclick="toggleCustomDropdown(this, event)" style="min-width: 195px;">
                         <span class="detail-select-label">
-                            {{ request('rentang') === 'semua' ? 'Semua rentang' : 'H-3 hingga terlambat' }}
+                            {{ request('rentang') === 'semua' ? 'Semua rentang' : 'H-7 hingga terlambat' }}
                         </span>
                         <svg class="detail-select-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                         <div class="custom-dropdown-menu" onclick="event.stopPropagation()">
                             <div class="custom-dropdown-item {{ request('rentang', 'h3_terlambat') === 'h3_terlambat' ? 'is-selected' : '' }}" onclick="selectFilterOption('rentang', 'h3_terlambat', event)">
-                                <span>H-3 hingga terlambat</span>
+                                <span>H-7 hingga terlambat</span>
                                 @if (request('rentang', 'h3_terlambat') === 'h3_terlambat')
                                     <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <polyline points="20 6 9 17 4 12"></polyline>
@@ -1481,6 +1481,9 @@
                     <a href="{{ route('jatuh-tempo.index', array_merge(request()->except('tab'), ['tab' => 'semua'])) }}" class="pill-btn {{ $tab === 'semua' ? 'active' : '' }}">
                         Semua <span class="pill-badge">{{ $countSemua }}</span>
                     </a>
+                    <a href="{{ route('jatuh-tempo.index', array_merge(request()->except('tab'), ['tab' => 'h-4-7'])) }}" class="pill-btn {{ $tab === 'h-4-7' ? 'active' : '' }}">
+                        H-7 – H-4 <span class="pill-badge">{{ $countH4sd7 }}</span>
+                    </a>
                     <a href="{{ route('jatuh-tempo.index', array_merge(request()->except('tab'), ['tab' => 'h-3'])) }}" class="pill-btn {{ $tab === 'h-3' ? 'active' : '' }}">
                         H-3 <span class="pill-badge">{{ $countH3 }}</span>
                     </a>
@@ -1503,7 +1506,7 @@
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
-                    Pengingat aktif mulai H-3
+                    Pengingat aktif mulai H-7
                 </div>
             </div>
         </form>

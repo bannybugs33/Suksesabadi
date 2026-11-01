@@ -156,10 +156,33 @@ class JatuhTempoTest extends TestCase
         $response->assertSee('Peringatan jatuh tempo');
         $response->assertSee('Lihat detail');
         $response->assertSee(route('jatuh-tempo.index'));
-        $response->assertSee('4 kuitansi');
-        $response->assertSee('3 terlambat • 1 besok');
+        $response->assertSee('4 tagihan perlu perhatian mulai H-7 (3 terlambat)');
         $response->assertSee('Perlu perhatian');
         $response->assertSee('Toko Makmur Jaya');
+    }
+
+    public function test_jatuh_tempo_page_uses_the_same_h7_window_as_dashboard(): void
+    {
+        Carbon::setTestNow(Carbon::parse('2026-09-29 09:00:00'));
+        $user = User::factory()->create();
+        foreach ([['Tempo H-5', '2026-10-04'], ['Tempo H-7', '2026-10-06'], ['Tempo H-9', '2026-10-08']] as [$nama, $tempo]) {
+            Kuitansi::create([
+                'user_id' => $user->id, 'nomor_kuitansi' => 'KWT-'.$nama, 'nama_pihak' => $nama, 'jenis' => 'piutang',
+                'nominal_transaksi' => 100000, 'status_pembayaran' => 'belum_lunas',
+                'tanggal_kuitansi' => '2026-09-01', 'tanggal_jatuh_tempo' => $tempo,
+            ]);
+        }
+
+        $jatuhTempo = $this->actingAs($user)->get('/jatuh-tempo?tab=h-4-7');
+
+        $jatuhTempo->assertOk();
+        $jatuhTempo->assertSee('Pengingat aktif mulai H-7');
+        $jatuhTempo->assertSee('Tempo H-5');
+        $jatuhTempo->assertSee('Tempo H-7');
+        $jatuhTempo->assertDontSee('Tempo H-9');
+
+        // Dashboard menghitung jumlah yang sama (2 tagihan) untuk data yang sama.
+        $this->actingAs($user)->get('/dashboard')->assertSee('2 tagihan perlu perhatian mulai H-7');
     }
 
     public function test_jatuh_tempo_calculates_reminders_in_real_time(): void

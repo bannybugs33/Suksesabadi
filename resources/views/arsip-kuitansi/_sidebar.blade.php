@@ -74,7 +74,7 @@
             <div class="avatar">{{ strtoupper(substr(auth()->user()->name ?? 'AS', 0, 2)) }}</div>
             <div class="sidebar-user-info">
                 <div class="user-name">{{ auth()->user()->name ?? 'Andi Saputra' }}</div>
-                <div class="user-role">Owner • Toko Tempo</div>
+                <div class="user-role">Owner • Toko Sukses Abadi</div>
             </div>
             <form method="POST" action="{{ route('logout') }}" style="margin: 0; padding: 0;">
                 @csrf

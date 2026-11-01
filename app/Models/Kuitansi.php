@@ -11,11 +11,18 @@ use Illuminate\Support\Facades\Storage;
 class Kuitansi extends Model
 {
     /**
-     * Kode tempo yang dianggap "perlu perhatian" (pengingat aktif mulai H-3).
+     * Pengingat jatuh tempo aktif mulai H-7. Ini SATU-SATUNYA tempat aturan ini ditulis:
+     * Dashboard, halaman Jatuh Tempo, dan notifikasi setelah login semuanya memakainya,
+     * supaya jumlah "perlu perhatian" selalu sama di semua fitur.
+     */
+    public const HARI_PENGINGAT = 7;
+
+    /**
+     * Kode tempo yang dianggap "perlu perhatian": terlambat, hari ini, dan H-1 s/d H-7.
      *
      * @var array<int, string>
      */
-    public const KODE_PENGINGAT = ['terlambat', 'hari_ini', 'h-1', 'h-2', 'h-3'];
+    public const KODE_PENGINGAT = ['terlambat', 'hari_ini', 'h-1', 'h-2', 'h-3', 'h-4', 'h-5', 'h-6', 'h-7'];
 
     /**
      * @var string
@@ -77,7 +84,7 @@ class Kuitansi extends Model
             return ['label' => 'Jatuh tempo besok', 'code' => 'h-1'];
         }
 
-        if ($selisih <= 3) {
+        if ($selisih <= self::HARI_PENGINGAT) {
             return ['label' => "H-{$selisih}", 'code' => "h-{$selisih}"];
         }
 
@@ -85,8 +92,8 @@ class Kuitansi extends Model
     }
 
     /**
-     * Ringkasan pengingat jatuh tempo: kuitansi belum lunas yang sudah lewat
-     * atau jatuh tempo dalam 3 hari ke depan.
+     * Ringkasan pengingat jatuh tempo: kuitansi yang masih bersisa dan sudah lewat
+     * atau jatuh tempo dalam HARI_PENGINGAT (7) hari ke depan.
      * Jika $userId null, dihitung untuk seluruh toko (hanya angka agregat).
      *
      * @return array{jumlah: int, terlambat: int, sisa: float}
@@ -94,15 +101,16 @@ class Kuitansi extends Model
     public static function ringkasanPengingat(?int $userId = null, ?Carbon $tanggalAcuan = null): array
     {
         $acuan = ($tanggalAcuan ?? Carbon::today())->copy()->startOfDay();
-        $batas = $acuan->copy()->addDays(3)->toDateString();
+        $batas = $acuan->copy()->addDays(self::HARI_PENGINGAT)->toDateString();
 
         $items = static::query()
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
-            ->where('status_pembayaran', '!=', 'lunas')
             ->whereNotNull('tanggal_jatuh_tempo')
             ->whereDate('tanggal_jatuh_tempo', '<=', $batas)
             ->withSum('pembayaran as total_terbayar', 'nominal')
-            ->get();
+            ->get()
+            // Aktif = masih bersisa. Dihitung dari pembayaran, sama seperti Dashboard dan Jatuh Tempo.
+            ->filter(fn (self $k) => round((float) $k->nominal_transaksi - (float) $k->total_terbayar, 2) > 0);
 
         return [
             'jumlah' => $items->count(),
@@ -110,49 +118,6 @@ class Kuitansi extends Model
             'sisa' => (float) $items->sum(
                 fn (self $k) => max((float) $k->nominal_transaksi - (float) $k->total_terbayar, 0)
             ),
-        ];
-    }
-
-    /**
-     * Data grafik batang piutang yang dicatat per bulan (untuk panel halaman login).
-     *
-     * @return array{bars: array<int, array{label: string, nilai: float, tinggi: int, aktif: bool}>, total: float, perubahan: ?float}
-     */
-    public static function grafikPiutangBulanan(?Carbon $tanggalAcuan = null, int $jumlahBulan = 7): array
-    {
-        $bulanIni = ($tanggalAcuan ?? Carbon::today())->copy()->startOfMonth();
-        $awal = $bulanIni->copy()->subMonths($jumlahBulan - 1);
-
-        $perBulan = static::query()
-            ->where('jenis', 'piutang')
-            ->whereDate('tanggal_kuitansi', '>=', $awal->toDateString())
-            ->get(['tanggal_kuitansi', 'nominal_transaksi'])
-            ->groupBy(fn (self $k) => $k->tanggal_kuitansi->format('Y-m'))
-            ->map(fn ($grup) => (float) $grup->sum('nominal_transaksi'));
-
-        $bars = [];
-        for ($i = 0; $i < $jumlahBulan; $i++) {
-            $bulan = $awal->copy()->addMonths($i);
-            $bars[] = [
-                'label' => $bulan->translatedFormat('M'),
-                'nilai' => (float) $perBulan->get($bulan->format('Y-m'), 0.0),
-                'tinggi' => 12,
-                'aktif' => $i === $jumlahBulan - 1,
-            ];
-        }
-
-        $maks = max(array_column($bars, 'nilai'));
-        foreach ($bars as $i => $bar) {
-            $bars[$i]['tinggi'] = $maks > 0 ? max((int) round($bar['nilai'] / $maks * 100), 12) : 12;
-        }
-
-        $sekarang = $bars[$jumlahBulan - 1]['nilai'];
-        $sebelumnya = $bars[$jumlahBulan - 2]['nilai'];
-
-        return [
-            'bars' => $bars,
-            'total' => $sekarang,
-            'perubahan' => $sebelumnya > 0 ? round(($sekarang - $sebelumnya) / $sebelumnya * 100, 1) : null,
         ];
     }
 

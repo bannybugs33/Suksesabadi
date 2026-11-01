@@ -35,7 +35,8 @@ class JatuhTempoController extends Controller
             ->select('k.*')
             ->selectRaw('COALESCE(p.total_terbayar, 0) AS terbayar')
             ->selectRaw('k.nominal_transaksi - COALESCE(p.total_terbayar, 0) AS sisa')
-            ->where('k.status_pembayaran', '!=', 'lunas');
+            // Aktif = masih bersisa (dihitung dari pembayaran), sama seperti Dashboard.
+            ->whereRaw('ROUND(k.nominal_transaksi - COALESCE(p.total_terbayar, 0), 2) > 0');
 
         // Ambil semua data kuitansi yang perlu perhatian untuk kalkulasi metrik
         $allPerluPerhatian = (clone $baseQuery)
@@ -47,6 +48,7 @@ class JatuhTempoController extends Controller
 
         // Hitung Tab Counts
         $countSemua = $allPerluPerhatian->count();
+        $countH4sd7 = $allPerluPerhatian->whereIn('tempo_code', ['h-4', 'h-5', 'h-6', 'h-7'])->count();
         $countH3 = $allPerluPerhatian->where('tempo_code', 'h-3')->count();
         $countH2 = $allPerluPerhatian->where('tempo_code', 'h-2')->count();
         $countH1 = $allPerluPerhatian->where('tempo_code', 'h-1')->count();
@@ -84,7 +86,9 @@ class JatuhTempoController extends Controller
         }
 
         $tab = $request->query('tab', 'semua');
-        if ($tab !== 'semua') {
+        if ($tab === 'h-4-7') {
+            $filteredItems = $filteredItems->whereIn('tempo_code', ['h-4', 'h-5', 'h-6', 'h-7']);
+        } elseif ($tab !== 'semua') {
             $filteredItems = $filteredItems->where('tempo_code', $tab);
         }
 
@@ -169,6 +173,7 @@ class JatuhTempoController extends Controller
             'sisaUtang',
             'jumlahSupplierUtang',
             'countSemua',
+            'countH4sd7',
             'countH3',
             'countH2',
             'countH1',
@@ -186,43 +191,23 @@ class JatuhTempoController extends Controller
      */
     private function formatKuitansiItem(object $item, Carbon $tanggalAcuan): object
     {
-        $jatuhTempo = $item->tanggal_jatuh_tempo
-            ? Carbon::parse($item->tanggal_jatuh_tempo)->startOfDay()
-            : null;
+        // Kode tempo berasal dari satu sumber (Kuitansi::infoTempo) agar sama dengan Dashboard.
+        // Di sini hanya dipetakan ke teks yang dipakai halaman Jatuh Tempo.
+        $info = Kuitansi::infoTempo($item->tanggal_jatuh_tempo, null, $tanggalAcuan);
+        $kode = $info['code'];
 
-        $tempoLabel = '-';
-        $tempoBadge = '';
-        $tempoCode = 'aman';
+        $selisih = $item->tanggal_jatuh_tempo
+            ? (int) abs($tanggalAcuan->copy()->startOfDay()->diffInDays(Carbon::parse($item->tanggal_jatuh_tempo)->startOfDay()))
+            : 0;
 
-        if ($jatuhTempo) {
-            if ($jatuhTempo->lt($tanggalAcuan)) {
-                $selisih = $jatuhTempo->diffInDays($tanggalAcuan);
-                $tempoLabel = "Terlambat {$selisih} hari";
-                $tempoBadge = "Terlambat {$selisih} hari";
-                $tempoCode = 'terlambat';
-            } elseif ($jatuhTempo->isSameDay($tanggalAcuan)) {
-                $tempoLabel = 'Jatuh tempo hari ini';
-                $tempoBadge = 'Hari ini';
-                $tempoCode = 'hari_ini';
-            } elseif ($jatuhTempo->isSameDay($tanggalAcuan->copy()->addDay())) {
-                $tempoLabel = 'H-1 • Besok';
-                $tempoBadge = 'H-1 • Besok';
-                $tempoCode = 'h-1';
-            } elseif ($jatuhTempo->isSameDay($tanggalAcuan->copy()->addDays(2))) {
-                $tempoLabel = 'H-2';
-                $tempoBadge = 'H-2';
-                $tempoCode = 'h-2';
-            } elseif ($jatuhTempo->isSameDay($tanggalAcuan->copy()->addDays(3))) {
-                $tempoLabel = 'H-3';
-                $tempoBadge = 'H-3';
-                $tempoCode = 'h-3';
-            } else {
-                $selisih = $tanggalAcuan->diffInDays($jatuhTempo);
-                $tempoLabel = "{$selisih} hari lagi";
-                $tempoBadge = "{$selisih} hari lagi";
-                $tempoCode = 'lainnya';
-            }
-        }
+        [$tempoLabel, $tempoBadge, $tempoCode] = match (true) {
+            $kode === 'aman' => ['-', '', 'aman'],
+            $kode === 'terlambat' => ["Terlambat {$selisih} hari", "Terlambat {$selisih} hari", 'terlambat'],
+            $kode === 'hari_ini' => ['Jatuh tempo hari ini', 'Hari ini', 'hari_ini'],
+            $kode === 'h-1' => ['H-1 • Besok', 'H-1 • Besok', 'h-1'],
+            str_starts_with($kode, 'h-') => [strtoupper($kode), strtoupper($kode), $kode],
+            default => ["{$selisih} hari lagi", "{$selisih} hari lagi", 'lainnya'],
+        };
 
         $item->tempo_label = $tempoLabel;
         $item->tempo_badge = $tempoBadge;

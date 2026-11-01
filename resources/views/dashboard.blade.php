@@ -3,1606 +3,374 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Dashboard — BukuTempo</title>
+    <title>Dashboard - BukuTempo Toko Sukses Abadi</title>
+    @include('partials.topnav-styles')
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
         body {
-            background: #f7f8fa;
-            color: #1e2029;
-            font-family: Arial, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 13px;
-            line-height: 1.5;
-        }
-
-        /* Sidebar */
-        .sidebar {
-            position: fixed;
-            inset: 0 auto 0 0;
-            width: 220px;
-            padding: 24px 16px;
-            background: #91283b;
-            color: white;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            z-index: 100;
-        }
-
-        .brand {
-            padding: 0 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .brand-icon {
-            width: 32px;
-            height: 32px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .brand-text {
-            font-size: 20px;
-            font-weight: 700;
-            line-height: 1.1;
-        }
-
-        .brand-text small {
-            display: block;
-            margin-top: 3px;
-            font-size: 7.5px;
-            font-weight: 600;
-            letter-spacing: 1.5px;
-            color: #fce7eb;
-        }
-
-        .menu-label {
-            margin: 28px 10px 10px;
-            font-size: 10px;
-            color: #f0c7cf;
-            letter-spacing: 0.5px;
-            font-weight: 700;
-        }
-
-        .sidebar-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .sidebar-menu a,
-        .sidebar-menu span {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            color: #fce7eb;
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            transition: all 0.15s ease;
-        }
-
-        .sidebar-menu a:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-        }
-
-        .sidebar-menu a.menu-active {
-            background: rgba(255, 255, 255, 0.16);
-            color: white;
-            font-weight: 600;
-        }
-
-        .sidebar-menu .menu-disabled {
-            opacity: 0.85;
-            cursor: pointer;
-        }
-
-        .menu-group-active {
-            background: rgba(255, 255, 255, 0.16);
-            border-radius: 8px;
-            padding-bottom: 6px;
-        }
-
-        .menu-parent-link {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px 4px;
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 600;
-            text-decoration: none;
-        }
-
-        .menu-sub-link {
-            display: block;
-            padding: 2px 12px 4px 38px;
-            font-size: 12px;
-            color: #fce7eb;
-            text-decoration: none;
-            transition: color 0.15s ease;
-        }
-
-        .menu-sub-link:hover,
-        .menu-sub-link.active {
-            color: #ffffff;
-            font-weight: 600;
-        }
-
-        .sidebar-spacer {
-            flex: 1;
-            min-height: 24px;
-        }
-
-        /* Sidebar Sync Info Box */
-        .sync-info-box {
-            background: rgba(0, 0, 0, 0.18);
-            border-radius: 8px;
-            padding: 12px 14px;
-            margin-bottom: 16px;
-        }
-
-        .sync-info-status {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            color: #f8d5dc;
-            font-weight: 500;
-            margin-bottom: 6px;
-        }
-
-        .sync-dot {
-            width: 7px;
-            height: 7px;
-            background: #22c55e;
-            border-radius: 50%;
-            display: inline-block;
-        }
-
-        .sync-info-label {
-            font-size: 10px;
-            color: #e8a2af;
-        }
-
-        .sync-info-time {
-            font-size: 11px;
-            color: #ffffff;
-            font-weight: 600;
-            margin-top: 1px;
-        }
-
-        /* Sidebar User Profile */
-        .sidebar-user {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 6px 0;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        .avatar {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.22);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 11px;
-            font-weight: 700;
-            color: white;
-            flex-shrink: 0;
-        }
-
-        .sidebar-user-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .user-name {
-            font-size: 12px;
-            font-weight: 600;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            color: #ffffff;
-        }
-
-        .user-role {
-            font-size: 10.5px;
-            color: #f0c7cf;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .logout-icon-btn {
-            background: none;
-            border: none;
-            color: #fce7eb;
-            cursor: pointer;
-            padding: 4px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.15s ease;
-        }
-
-        .logout-icon-btn:hover {
-            color: white;
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        /* Main Content */
-        .main-content {
-            margin-left: 220px;
-            padding: 32px 36px;
-            max-width: 1400px;
-        }
-
-        /* Top Header */
-        .dashboard-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            flex-wrap: wrap;
-            margin-bottom: 24px;
-        }
-
-        .header-title-wrap h1 {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1a1a24;
-            letter-spacing: -0.3px;
-        }
-
-        .header-title-wrap p {
-            color: #696b78;
-            font-size: 13px;
-            margin-top: 4px;
-        }
-
-        .btn-tambah-kuitansi {
-            background: #91283b;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            padding: 9px 18px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            box-shadow: 0 2px 6px rgba(145, 40, 59, 0.2);
-            transition: background 0.15s ease;
-            text-decoration: none;
-        }
-
-        .btn-tambah-kuitansi:hover {
-            background: #7a2232;
-        }
-
-        /* Top Warning Banner: Peringatan Jatuh Tempo */
-        .warning-banner {
-            background: #fdf2f4;
-            border: 1px solid #fee2e2;
-            border-radius: 12px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-bottom: 24px;
-        }
-
-        .warning-banner-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .warning-icon-box {
-            width: 40px;
-            height: 40px;
-            background: #91283b;
-            color: white;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .warning-banner-left h2 {
-            font-size: 14px;
-            font-weight: 700;
-            color: #1a1a24;
-            margin-bottom: 2px;
-        }
-
-        .warning-banner-left p {
-            font-size: 12px;
-            color: #696b78;
-        }
-
-        .btn-lihat-detail {
-            background: #ffffff;
-            border: 1px solid #e2e4ea;
-            border-radius: 8px;
-            padding: 7px 16px;
-            font-size: 12px;
-            font-weight: 600;
-            color: #374151;
-            text-decoration: none;
-            transition: all 0.15s ease;
-            white-space: nowrap;
-        }
-
-        .btn-lihat-detail:hover {
-            background: #f9fafb;
-            border-color: #d1d5db;
-        }
-
-        /* 4 Summary Cards Grid */
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .summary-card {
-            background: #ffffff;
-            border: 1px solid #edf0f4;
-            border-radius: 12px;
-            padding: 18px 20px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .summary-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-        }
-
-        .summary-card-title {
-            font-size: 12px;
-            font-weight: 500;
-            color: #696b78;
-        }
-
-        .summary-icon-box {
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .summary-icon-box.gray {
-            background: #f3f4f6;
-            color: #4b5563;
-        }
-
-        .summary-icon-box.red {
-            background: #fdf2f4;
-            color: #dc2626;
-        }
-
-        .summary-icon-box.amber {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
-        .summary-icon-box.rose {
-            background: #fdf2f4;
-            color: #91283b;
-        }
-
-        .summary-card-value {
-            font-size: 22px;
-            font-weight: 700;
-            color: #1a1a24;
-            margin: 12px 0 6px;
-            letter-spacing: -0.3px;
-        }
-
-        .summary-card-subtext {
-            font-size: 11px;
-            color: #696b78;
-        }
-
-        .summary-card-subtext.red {
-            color: #dc2626;
-            font-weight: 500;
-        }
-
-        .summary-card-subtext.amber {
-            color: #b45309;
-            font-weight: 500;
-        }
-
-        /* 2-Column Layout for Middle & Bottom Rows */
-        .content-grid-row {
-            display: grid;
-            grid-template-columns: 1.75fr 1fr;
-            gap: 20px;
-            margin-bottom: 24px;
-        }
-
-        .card-box {
-            background: #ffffff;
-            border: 1px solid #edf0f4;
-            border-radius: 12px;
-            padding: 22px 24px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-            position: relative;
-        }
-
-        .card-box-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .card-box-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1a1a24;
-        }
-
-        .card-box-link {
-            font-size: 12px;
-            font-weight: 600;
-            color: #91283b;
-            text-decoration: none;
-        }
-
-        .card-box-link:hover {
-            text-decoration: underline;
-        }
-
-        /* Arus Utang & Piutang Chart Card */
-        .chart-legend-row {
-            display: flex;
-            align-items: center;
-            gap: 18px;
-            margin-bottom: 20px;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            color: #696b78;
-        }
-
-        .legend-color-box {
-            width: 10px;
-            height: 10px;
-            border-radius: 2px;
-        }
-
-        .legend-color-box.gray {
-            background: #646675;
-        }
-
-        .legend-color-box.red {
-            background: #91283b;
-        }
-
-        /* Bar Chart Visual */
-        .bar-chart-container {
-            height: 180px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            padding-bottom: 28px;
-            border-bottom: 1px solid #edf0f4;
-            position: relative;
-            margin-top: 10px;
-        }
-
-        .chart-month-col {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100%;
-            justify-content: flex-end;
-            position: relative;
-        }
-
-        .chart-bars-wrap {
-            display: flex;
-            align-items: flex-end;
-            gap: 6px;
-            height: 100%;
-        }
-
-        .bar-item {
-            width: 24px;
-            border-radius: 4px 4px 0 0;
-            transition: opacity 0.15s ease;
-        }
-
-        .bar-item:hover {
-            opacity: 0.85;
-        }
-
-        .bar-item.gray {
-            background: #646675;
-        }
-
-        .bar-item.red {
-            background: #91283b;
-        }
-
-        .month-label {
-            position: absolute;
-            bottom: -24px;
-            font-size: 11px;
-            color: #8b8e9c;
-            font-weight: 500;
-        }
-
-        /* Floating Popup Over Chart: Detail Pengingat */
-        .chart-overlay-popup {
-            position: absolute;
-            top: 24px;
-            left: 24px;
-            width: 275px;
-            background: #ffffff;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 14px 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
-            z-index: 10;
-        }
-
-        .popup-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-
-        .popup-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1a1a24;
-        }
-
-        .popup-subtitle {
-            font-size: 11px;
-            color: #696b78;
-            margin-top: 1px;
-        }
-
-        .popup-close-btn {
-            background: none;
-            border: none;
-            color: #8b8e9c;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 22px;
-            height: 22px;
-            border-radius: 4px;
-            cursor: pointer;
-            padding: 0;
-            transition: all 0.15s ease;
-        }
-
-        .popup-close-btn:hover {
-            color: #1a1a24;
-            background: rgba(0, 0, 0, 0.05);
-        }
-
-        .popup-item-box {
-            background: #fdf2f4;
-            border-radius: 8px;
-            padding: 10px 12px;
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            gap: 6px;
-            margin-bottom: 12px;
-        }
-
-        .popup-item-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-
-        .popup-item-icon {
-            width: 28px;
-            height: 28px;
-            background: #91283b;
-            color: white;
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .popup-item-title {
-            font-size: 12px;
-            font-weight: 700;
-            color: #1a1a24;
-            white-space: normal;
-        }
-
-        .popup-item-meta {
-            font-size: 10.5px;
-            color: #696b78;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .popup-item-amount {
-            font-size: 12px;
-            font-weight: 700;
-            color: #dc2626;
-            white-space: nowrap;
-            padding-left: 38px; /* sejajar dengan teks di sebelah ikon */
-        }
-
-        .btn-popup-action {
-            display: block;
-            width: 100%;
-            background: #91283b;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 8px;
-            text-align: center;
-            font-size: 12px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background 0.15s ease;
-        }
-
-        .btn-popup-action:hover {
-            background: #7a2232;
-        }
-
-        /* Status Pembayaran Progress Bars */
-        .status-progress-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-top: 8px;
-        }
-
-        .status-progress-item {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .status-row-label {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 12px;
-        }
-
-        .status-name {
-            font-weight: 600;
-            color: #1a1a24;
-        }
-
-        .status-count-pct {
-            color: #696b78;
-            font-size: 11px;
-        }
-
-        .progress-track {
-            width: 100%;
-            height: 6px;
-            background: #f1f3f7;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 3px;
-        }
-
-        .status-footer-row {
-            margin-top: 24px;
-            padding-top: 14px;
-            border-top: 1px solid #edf0f4;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .status-footer-label {
-            font-size: 11.5px;
-            color: #696b78;
-        }
-
-        .status-footer-value {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1a1a24;
-        }
-
-        /* Perlu Perhatian List */
-        .perhatian-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .perhatian-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 14px;
-            border-radius: 8px;
-            text-decoration: none;
-            color: inherit;
-            transition: background 0.15s ease;
-        }
-
-        .perhatian-item:hover {
-            background: #fcf5f6;
-        }
-
-        .perhatian-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            min-width: 0;
-        }
-
-        .perhatian-icon-box {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-
-        .perhatian-icon-box.red {
-            background: #fdf2f4;
-            color: #dc2626;
-        }
-
-        .perhatian-icon-box.amber {
-            background: #fef3c7;
-            color: #b45309;
-        }
-
-        .perhatian-party {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1a1a24;
-        }
-
-        .perhatian-meta {
-            font-size: 11px;
-            color: #696b78;
-            margin-top: 2px;
-        }
-
-        .perhatian-right {
-            text-align: right;
-            flex-shrink: 0;
-        }
-
-        .perhatian-nominal {
-            font-size: 13px;
-            font-weight: 700;
-            color: #1a1a24;
-        }
-
-        .perhatian-tempo {
-            font-size: 11px;
-            margin-top: 2px;
-            font-weight: 500;
-        }
-
-        .perhatian-tempo.red {
-            color: #dc2626;
-        }
-
-        .perhatian-tempo.amber {
-            color: #b45309;
-        }
-
-        /* Aktivitas Terbaru List */
-        .aktivitas-list {
-            display: flex;
-            flex-direction: column;
-            gap: 18px;
-            margin-top: 6px;
-        }
-
-        .aktivitas-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 14px;
-        }
-
-        .aktivitas-icon-box {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            margin-top: 2px;
-        }
-
-        .aktivitas-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .aktivitas-title {
-            font-size: 12.5px;
-            font-weight: 600;
-            color: #1a1a24;
-            line-height: 1.3;
-        }
-
-        .aktivitas-meta {
-            font-size: 11px;
-            color: #696b78;
-            margin-top: 2px;
-        }
-
-        .aktivitas-time {
-            font-size: 10.5px;
-            color: #9ca3af;
-            margin-top: 4px;
-        }
-
-        /* Modal Tambah Kuitansi */
-        .modal-backdrop {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            z-index: 200;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-card {
-            background: white;
-            border-radius: 12px;
-            max-width: 500px;
-            width: 100%;
-            padding: 24px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        .modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .modal-title {
-            font-size: 16px;
-            font-weight: 700;
-            color: #1a1a24;
-        }
-
-        .modal-close-btn {
-            background: none;
-            border: none;
-            color: #8b8e9c;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 28px;
-            height: 28px;
-            border-radius: 6px;
-            cursor: pointer;
-            padding: 0;
-            transition: all 0.15s ease;
-        }
-
-        .modal-close-btn:hover {
-            color: #1a1a24;
-            background: #f3f4f6;
-        }
-
-        /* Responsive Breakpoints */
-        @media (max-width: 1120px) {
-            .summary-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            .content-grid-row {
-                grid-template-columns: 1fr;
-            }
-            .chart-overlay-popup {
-                position: static;
-                width: 100%;
-                margin-top: 20px;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                position: static;
-                width: 100%;
-                padding: 16px;
-            }
-            .main-content {
-                margin-left: 0;
-                padding: 20px 16px;
-            }
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-        .modal-custom-select {
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            height: 38px;
-            padding: 8px 12px;
-            border: 1px solid #d8dbe2;
-            border-radius: 8px;
-            font-size: 13px;
-            background: #ffffff;
-            color: #1a1a24;
-            cursor: pointer;
-            transition: all 0.15s ease;
-            user-select: none;
-        }
-
-        .modal-custom-select:hover {
-            border-color: #b0b4be;
-            background: #fafafc;
-        }
-
-        .modal-custom-select.is-open {
-            border-color: #91283b;
-            box-shadow: 0 0 0 3px rgba(145, 40, 59, 0.12);
-        }
-
-        .dropdown-chevron {
-            color: #717381;
-            transition: transform 0.2s ease, color 0.15s ease;
-            flex-shrink: 0;
-        }
-
-        .modal-custom-select.is-open .dropdown-chevron {
-            transform: rotate(180deg);
-            color: #91283b;
-        }
-
-        .custom-dropdown-menu {
-            display: none;
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 0;
-            width: 100%;
-            background: #ffffff;
-            border: 1px solid #e6e7ec;
-            border-radius: 12px;
-            box-shadow: 0 14px 34px -4px rgba(26, 26, 36, 0.14), 0 4px 12px -2px rgba(26, 26, 36, 0.05);
-            padding: 6px;
-            z-index: 200;
-            box-sizing: border-box;
-            animation: dropdownFadeIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .modal-custom-select.is-open .custom-dropdown-menu {
-            display: block;
-        }
-
-        @keyframes dropdownFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-6px) scale(0.98);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-        }
-
-        .custom-dropdown-item {
-            padding: 9px 12px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #292930;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            cursor: pointer;
-            transition: all 0.12s ease;
-        }
-
-        .custom-dropdown-item:hover {
-            background: #fdf2f4;
-            color: #91283b;
-        }
-
-        .custom-dropdown-item.is-selected {
-            background: #fbf2f4;
-            color: #91283b;
-            font-weight: 600;
-        }
-
-        .dropdown-check {
-            color: #91283b;
-            flex-shrink: 0;
-        }
-        /* Toast pengingat jatuh tempo setelah login */
-        .toast-pengingat {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 60;
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            max-width: 340px;
-            padding: 14px 16px;
-            background: #ffffff;
-            border: 1px solid #e6e7ec;
-            border-left: 4px solid #91283b;
-            border-radius: 10px;
-            box-shadow: 0 12px 28px rgba(32, 32, 48, 0.16);
-            animation: toastMasuk 0.3s ease;
-        }
-
-        .toast-pengingat-body strong {
-            display: block;
-            font-size: 13px;
-            color: #1a1a24;
-        }
-
-        .toast-pengingat-body p {
-            margin: 4px 0 8px;
-            font-size: 12px;
-            color: #555765;
-            line-height: 1.45;
-        }
-
-        .toast-pengingat-link {
-            font-size: 12px;
-            font-weight: 700;
-            color: #91283b;
-            text-decoration: none;
-        }
-
-        .toast-pengingat-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            line-height: 1;
-            color: #8b8e9c;
-            cursor: pointer;
-        }
-
-        @keyframes toastMasuk {
-            from { opacity: 0; transform: translateY(-8px); }
-            to { opacity: 1; transform: translateY(0); }
+            font-family: 'Manrope', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: #fff;
+            color: var(--ink);
+            padding: 12px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .shell { background: var(--stage); border-radius: 40px; padding: 16px 18px 18px; max-width: 1240px; margin: 0 auto; }
+        .board { margin-top: 14px; background: var(--board); border-radius: 32px; padding: 30px 30px 32px; box-shadow: 0 30px 60px -34px rgba(42, 42, 92, 0.3); }
+
+        a { color: inherit; }
+
+        /* ---------- Judul halaman ---------- */
+        .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+        .page-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.15; }
+        .page-head p { margin-top: 6px; font-size: 13px; font-weight: 500; color: var(--muted); }
+
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 8px;
+            height: 44px; padding: 0 22px; border-radius: 999px;
+            background: var(--ink); color: #fff; text-decoration: none;
+            font-size: 13.5px; font-weight: 700;
+            box-shadow: 0 14px 26px -12px rgba(42, 42, 92, 0.6);
+        }
+        .btn-primary:hover { background: var(--ink-strong); }
+
+        /* ---------- Banner pengingat ---------- */
+        .banner {
+            margin-top: 20px; padding: 12px 16px; border-radius: 16px;
+            display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+            background: var(--danger-bg); color: #8f1b34;
+            font-size: 13px; font-weight: 600;
+        }
+        .banner strong { font-weight: 800; }
+        .banner.is-aman { background: #e9f6ef; color: #1f6b44; }
+        .banner a {
+            padding: 7px 14px; border-radius: 999px; background: #fff; color: var(--ink);
+            font-size: 12px; font-weight: 700; text-decoration: none;
+            box-shadow: 0 4px 10px -6px rgba(42, 42, 92, 0.35);
+        }
+
+        /* ---------- Grid utama ---------- */
+        .grid { margin-top: 20px; display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 20px; align-items: start; }
+        .col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+        .row-top { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+
+        .section-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
+        .section-head h2 { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
+        .section-head .hint { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 500; color: var(--muted); }
+        .pill-link {
+            padding: 6px 14px; border-radius: 999px; background: #fff; color: var(--ink);
+            font-size: 11.5px; font-weight: 700; text-decoration: none; white-space: nowrap;
+            box-shadow: 0 4px 10px -6px rgba(42, 42, 92, 0.35);
+        }
+
+        /* ---------- Kartu posisi bersih ---------- */
+        .posisi {
+            position: relative; overflow: hidden; color: #fff; border-radius: 26px; padding: 22px 22px 18px;
+            min-height: 250px; display: flex; flex-direction: column; justify-content: space-between;
+            background: linear-gradient(150deg, #2d2a62 0%, #4c3a78 45%, #7b4768 75%, #a45450 100%);
+            box-shadow: 0 24px 40px -22px rgba(45, 42, 98, 0.7);
+        }
+        .posisi::after { content: ''; position: absolute; width: 230px; height: 230px; border-radius: 50%; right: -70px; bottom: -90px; background: rgba(255, 255, 255, 0.1); pointer-events: none; }
+        .posisi > * { position: relative; z-index: 1; }
+        .posisi .judul { font-size: 10.5px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
+        .posisi .rumus { margin-top: 3px; font-size: 11px; font-weight: 500; color: rgba(255, 255, 255, 0.65); }
+        .posisi .nilai { margin-top: 8px; font-size: 30px; font-weight: 800; letter-spacing: -0.8px; }
+        .posisi .pecahan { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+        .posisi .pecahan small { display: block; font-size: 10px; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; color: rgba(255, 255, 255, 0.7); }
+        .posisi .pecahan b { display: block; margin-top: 3px; font-size: 14px; font-weight: 800; }
+        .posisi .pecahan em { display: block; margin-top: 1px; font-style: normal; font-size: 10.5px; font-weight: 500; color: rgba(255, 255, 255, 0.65); }
+        .posisi .pemilik { margin-top: 14px; font-size: 10.5px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: rgba(255, 255, 255, 0.78); }
+
+        /* ---------- Kartu jatuh tempo terdekat ---------- */
+        .mini-list { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .mini {
+            display: flex; flex-direction: column; gap: 3px; padding: 16px; border-radius: 22px;
+            background: var(--card); text-decoration: none; min-width: 0;
+            box-shadow: 0 14px 26px -20px rgba(42, 42, 92, 0.45);
+        }
+        .mini:hover { background: #fff; }
+        .mini .ikon { width: 34px; height: 34px; border-radius: 11px; background: var(--ink); color: #fff; display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
+        .mini b { font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .mini span { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+        .mini strong { margin-top: 8px; font-size: 16px; font-weight: 800; }
+        .kosong { padding: 18px; border-radius: 18px; background: var(--card); font-size: 12.5px; font-weight: 500; color: var(--muted); grid-column: 1 / -1; }
+
+        /* ---------- Daftar perlu perhatian ---------- */
+        .daftar { background: var(--card); border-radius: 24px; padding: 6px 18px; }
+        .baris { display: flex; align-items: center; gap: 12px; padding: 14px 0; text-decoration: none; border-top: 1px solid rgba(42, 42, 92, 0.08); }
+        .baris:first-child { border-top: 0; }
+        .baris .ikon { color: var(--muted); flex-shrink: 0; display: flex; }
+        .baris .info { flex: 1; min-width: 0; }
+        .baris .info b { display: block; font-size: 13px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .baris .info span { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 500; color: var(--muted); }
+        .baris .jenis { font-size: 10.5px; font-weight: 700; color: var(--muted); }
+        .baris .nominal { font-size: 13px; font-weight: 800; white-space: nowrap; }
+        .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .badge.merah { background: var(--danger-bg); color: #a3153f; }
+        .badge.kuning { background: var(--warn-bg); color: var(--warn-ink); }
+        .badge.netral { background: #e8e7e3; color: var(--muted); }
+        .daftar .kosong { background: transparent; grid-column: auto; text-align: center; padding: 26px 8px; }
+
+        /* ---------- Panel kanan ---------- */
+        .panel { background: var(--card); border-radius: 28px; padding: 22px 20px; display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+        .panel h3 { font-size: 14.5px; font-weight: 800; letter-spacing: -0.2px; }
+        .panel .sub { margin-top: 2px; font-size: 11.5px; font-weight: 500; color: var(--muted); }
+
+        .dibayar-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+        .dibayar-head .nilai { margin-top: 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.6px; }
+        .chip { padding: 6px 12px; border-radius: 999px; background: #fff; font-size: 11.5px; font-weight: 700; white-space: nowrap; box-shadow: 0 4px 10px -6px rgba(42, 42, 92, 0.35); }
+
+        .legenda { display: flex; flex-direction: column; gap: 4px; margin-top: 10px; font-size: 11.5px; font-weight: 600; }
+        .legenda i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; }
+        .legenda .masuk i { background: var(--ink); }
+        .legenda .keluar i { background: #d12f4d; }
+        .legenda .keluar { color: #a3153f; }
+
+        .grafik { width: 100%; height: auto; margin-top: 8px; display: block; }
+
+        .status-item + .status-item { margin-top: 12px; }
+        .status-item .baris-status { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; }
+        .status-item .baris-status span:last-child { color: var(--muted); font-weight: 600; }
+        .track { margin-top: 6px; height: 7px; border-radius: 999px; background: rgba(42, 42, 92, 0.1); overflow: hidden; }
+        .track div { height: 100%; border-radius: 999px; min-width: 0; }
+
+        .total { margin-top: 16px; padding-top: 14px; border-top: 1px solid rgba(42, 42, 92, 0.1); display: grid; gap: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
+        .total div { display: flex; justify-content: space-between; gap: 8px; }
+        .total b { color: var(--ink); font-weight: 800; }
+
+        .aktivitas { margin-top: 10px; }
+        .aktivitas .item { padding: 10px 0; border-top: 1px solid rgba(42, 42, 92, 0.08); }
+        .aktivitas .item:first-child { border-top: 0; }
+        .aktivitas b { display: block; font-size: 12.5px; font-weight: 800; }
+        .aktivitas span { display: block; margin-top: 2px; font-size: 11.5px; font-weight: 500; color: var(--muted); }
+        .aktivitas .kosong { background: transparent; padding: 10px 0; }
+
+        /* ---------- Toast pengingat setelah login ---------- */
+        .toast {
+            position: fixed; bottom: 20px; right: 20px; z-index: 50; max-width: 340px;
+            display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; border-radius: 18px;
+            background: #fff; box-shadow: 0 24px 48px -16px rgba(42, 42, 92, 0.4);
+            border-left: 5px solid #d12f4d;
+        }
+        .toast strong { display: block; font-size: 13px; font-weight: 800; }
+        .toast p { margin-top: 3px; font-size: 12px; font-weight: 500; line-height: 1.5; color: var(--muted); }
+        .toast a { display: inline-block; margin-top: 6px; font-size: 12px; font-weight: 800; color: var(--accent); text-decoration: none; }
+        .toast button { border: 0; background: none; font-size: 20px; line-height: 1; color: var(--muted); cursor: pointer; }
+
+        @media (max-width: 1020px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 720px) {
+            body { padding: 0; }
+            .shell { border-radius: 0; padding: 12px; }
+            .board { padding: 20px 16px 24px; border-radius: 24px; }
+            .row-top { grid-template-columns: 1fr; }
+            .baris { flex-wrap: wrap; row-gap: 8px; }
+            .baris .info { flex: 1 1 calc(100% - 34px); }
+            .baris .jenis { margin-left: 30px; }
+            .baris .nominal { margin-left: auto; }
         }
     </style>
 </head>
 <body>
-    @include('_sidebar')
+@php
+    $rp = fn ($n) => ($n < 0 ? '-' : '').'Rp'.number_format(abs($n), 0, ',', '.');
+    $namaPengguna = auth()->user()->name ?? 'Owner';
+    $namaDepan = explode(' ', trim($namaPengguna))[0];
+@endphp
 
-    <!-- Main Content Area -->
-    <main class="main-content">
-        @if (session('pengingat_login') && session('pengingat_login')['jumlah'] > 0)
-            @php($pengingatLogin = session('pengingat_login'))
-            <div class="toast-pengingat" id="toastPengingat" role="alert">
-                <div class="toast-pengingat-body">
-                    <strong>Pengingat jatuh tempo</strong>
-                    <p>
-                        {{ $pengingatLogin['jumlah'] }} kuitansi perlu perhatian
-                        @if ($pengingatLogin['terlambat'] > 0)
-                            ({{ $pengingatLogin['terlambat'] }} terlambat)
-                        @endif
-                        • Rp{{ number_format($pengingatLogin['sisa'], 0, ',', '.') }} belum diselesaikan.
-                    </p>
-                    <a href="{{ route('jatuh-tempo.index') }}" class="toast-pengingat-link">Lihat detail</a>
-                </div>
-                <button type="button" class="toast-pengingat-close" onclick="document.getElementById('toastPengingat').remove()" aria-label="Tutup pengingat">&times;</button>
+@if (session('pengingat_login') && session('pengingat_login')['jumlah'] > 0)
+    @php($pengingatLogin = session('pengingat_login'))
+    <div class="toast" id="toastPengingat" role="alert">
+        <div>
+            <strong>Pengingat jatuh tempo</strong>
+            <p>
+                {{ $pengingatLogin['jumlah'] }} kuitansi perlu perhatian
+                @if ($pengingatLogin['terlambat'] > 0)
+                    ({{ $pengingatLogin['terlambat'] }} terlambat)
+                @endif
+                • {{ $rp($pengingatLogin['sisa']) }} belum diselesaikan.
+            </p>
+            <a href="{{ route('jatuh-tempo.index') }}">Lihat detail</a>
+        </div>
+        <button type="button" onclick="document.getElementById('toastPengingat').remove()" aria-label="Tutup pengingat">&times;</button>
+    </div>
+@endif
+
+<div class="shell">
+    @include('partials.topnav', ['aktifMenu' => 'dashboard', 'badgePengingat' => $perluPerhatianCount])
+
+    <main class="board">
+        <div class="page-head">
+            <div>
+                <h1>Dashboard</h1>
+                <p>{{ $salam }}, Pak {{ $namaDepan }}. Kondisi utang-piutang Toko Sukses Abadi per {{ $tanggalAcuan->translatedFormat('d F Y') }}.</p>
+            </div>
+            <a href="{{ route('kuitansi.create') }}" class="btn-primary">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Tambah kuitansi
+            </a>
+        </div>
+
+        @if ($perluPerhatianCount > 0)
+            <div class="banner" role="status">
+                <span><strong>Peringatan jatuh tempo</strong> · {{ $perluPerhatianCount }} tagihan perlu perhatian mulai H-{{ \App\Models\Kuitansi::HARI_PENGINGAT }} ({{ $terlambatCount }} terlambat).</span>
+                <a href="{{ route('jatuh-tempo.index') }}">Lihat detail</a>
+            </div>
+        @else
+            <div class="banner is-aman" role="status">
+                <span><strong>Peringatan jatuh tempo</strong> · Belum ada tagihan yang terlambat atau jatuh tempo dalam {{ \App\Models\Kuitansi::HARI_PENGINGAT }} hari ke depan.</span>
+                <a href="{{ route('jatuh-tempo.index') }}">Lihat semua tagihan</a>
             </div>
         @endif
 
-        <!-- Dashboard Top Header -->
-        <header class="dashboard-header">
-            <div class="header-title-wrap">
-                <h1>Selamat pagi, Pak {{ explode(' ', auth()->user()->name ?? 'Andi')[0] }}</h1>
-                <p>Berikut kondisi utang–piutang Toko Tempo per {{ $tanggalAcuan->translatedFormat('d F Y') }}.</p>
-            </div>
-            <a href="{{ route('kuitansi.create') }}" class="btn-tambah-kuitansi" style="text-decoration: none;">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Tambah kuitansi
-            </a>
-        </header>
-
-        <!-- Peringatan Jatuh Tempo Banner -->
-        <div class="warning-banner">
-            <div class="warning-banner-left">
-                <div class="warning-icon-box">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                </div>
-                <div>
-                    <h2>Peringatan jatuh tempo</h2>
-                    @if ($perluPerhatianCount > 0)
-                        <p>Pengingat aktif mulai H-3. Ada {{ $perluPerhatianCount }} utang dan piutang yang perlu perhatian hari ini.</p>
-                    @else
-                        <p>Pengingat aktif mulai H-3. Belum ada utang atau piutang yang mendekati jatuh tempo.</p>
-                    @endif
-                </div>
-            </div>
-            <a href="{{ route('jatuh-tempo.index') }}" class="btn-lihat-detail">Lihat detail</a>
-        </div>
-
-        <!-- 4 Summary Metric Cards -->
-        <div class="summary-grid">
-            <!-- Card 1: Sisa Piutang Pelanggan -->
-            <div class="summary-card">
-                <div class="summary-card-header">
-                    <span class="summary-card-title">Sisa piutang pelanggan</span>
-                    <div class="summary-icon-box gray">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="17" y1="7" x2="7" y2="17"></line>
-                            <polyline points="17 17 7 17 7 7"></polyline>
-                        </svg>
-                    </div>
-                </div>
-                <div class="summary-card-value">Rp{{ number_format($sisaPiutangPelanggan, 0, ',', '.') }}</div>
-                <div class="summary-card-subtext">{{ $kuitansiPelangganCount }} kuitansi pelanggan</div>
-            </div>
-
-            <!-- Card 2: Sisa Utang Supplier -->
-            <div class="summary-card">
-                <div class="summary-card-header">
-                    <span class="summary-card-title">Sisa utang supplier</span>
-                    <div class="summary-icon-box red">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="7" y1="17" x2="17" y2="7"></line>
-                            <polyline points="7 7 17 7 17 17"></polyline>
-                        </svg>
-                    </div>
-                </div>
-                <div class="summary-card-value">Rp{{ number_format($sisaUtangSupplier, 0, ',', '.') }}</div>
-                <div class="summary-card-subtext red">{{ $kuitansiSupplierCount }} kuitansi supplier</div>
-            </div>
-
-            <!-- Card 3: Jatuh Tempo -->
-            <div class="summary-card">
-                <div class="summary-card-header">
-                    <span class="summary-card-title">Jatuh tempo</span>
-                    <div class="summary-icon-box amber">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="13" r="8"></circle>
-                            <path d="M12 9v4l2 2"></path>
-                            <path d="M5 3L2 6"></path>
-                            <path d="M22 6l-3-3"></path>
-                            <path d="M6.38 18.7L4 21"></path>
-                            <path d="M17.64 18.67L20 21"></path>
-                        </svg>
-                    </div>
-                </div>
-                <div class="summary-card-value">{{ $perluPerhatianCount }} kuitansi</div>
-                <div class="summary-card-subtext amber">{{ $terlambatCount }} terlambat • {{ $besokCount }} besok</div>
-            </div>
-
-            <!-- Card 4: Lunas Bulan Ini -->
-            <div class="summary-card">
-                <div class="summary-card-header">
-                    <span class="summary-card-title">Lunas bulan ini</span>
-                    <div class="summary-icon-box rose">
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                    </div>
-                </div>
-                <div class="summary-card-value">Rp{{ number_format($lunasBulanIni, 0, ',', '.') }}</div>
-                <div class="summary-card-subtext red">{{ $lunasBulanIniCount }} pembayaran selesai</div>
-            </div>
-        </div>
-
-        <!-- Middle Row: Arus Utang & Piutang vs Status Pembayaran -->
-        <div class="content-grid-row">
-            <!-- Left: Arus Utang & Piutang Chart -->
-            <div class="card-box">
-                <div class="card-box-header">
-                    <h2 class="card-box-title">Arus utang & piutang</h2>
-                    <span style="font-size: 12px; font-weight: 600; color: #91283b;">{{ $tanggalAcuan->translatedFormat('F Y') }}</span>
-                </div>
-
-                <div class="chart-legend-row">
-                    <div class="legend-item">
-                        <span class="legend-color-box gray"></span>
-                        <span>Piutang masuk</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color-box red"></span>
-                        <span>Utang keluar</span>
-                    </div>
-                </div>
-
-                <!-- Dual Bar Chart -->
-                <div class="bar-chart-container">
-                    @foreach ($chartData as $c)
-                        <div class="chart-month-col">
-                            <div class="chart-bars-wrap">
-                                <div class="bar-item gray" style="height: {{ $c['piutang'] }}%;" title="Piutang {{ $c['bulan'] }}: Rp{{ number_format($c['piutang_nominal'], 0, ',', '.') }}"></div>
-                                <div class="bar-item red" style="height: {{ $c['utang'] }}%;" title="Utang {{ $c['bulan'] }}: Rp{{ number_format($c['utang_nominal'], 0, ',', '.') }}"></div>
-                            </div>
-                            <span class="month-label">{{ $c['bulan'] }}</span>
-                        </div>
-                    @endforeach
-
-                    <!-- Floating Detail Pengingat Popup (hanya tampil jika ada kuitansi yang perlu perhatian) -->
-                    @if ($popupItem)
-                    <div class="chart-overlay-popup" id="detailPengingatPopup">
-                        <div class="popup-header">
-                            <div>
-                                <div class="popup-title">Detail pengingat</div>
-                                <div class="popup-subtitle">{{ $terlambatCount }} terlambat • {{ $besokCount }} jatuh tempo besok</div>
-                            </div>
-                            <button type="button" class="popup-close-btn" onclick="document.getElementById('detailPengingatPopup').style.display='none'" aria-label="Tutup detail">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                                </svg>
-                            </button>
-                        </div>
-
-                            <div class="popup-item-box">
-                                <div class="popup-item-left">
-                                    <div class="popup-item-icon">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                            <circle cx="12" cy="12" r="10"></circle>
-                                            <polyline points="12 6 12 12 16 14"></polyline>
-                                        </svg>
-                                    </div>
-                                    <div style="min-width: 0;">
-                                        <div class="popup-item-title">{{ $popupItem->tempo_label }} - {{ \Carbon\Carbon::parse($popupItem->tanggal_jatuh_tempo)->translatedFormat('d M Y') }}</div>
-                                        <div class="popup-item-meta">{{ $popupItem->nama_pihak }} • {{ $popupItem->nomor_kuitansi }}</div>
-                                    </div>
-                                </div>
-                                <div class="popup-item-amount">
-                                    Rp{{ number_format($popupItem->sisa, 0, ',', '.') }}
-                                </div>
-                            </div>
-
-                            <a href="{{ route('jatuh-tempo.index', ['selected' => $popupItem->id]) }}" class="btn-popup-action">
-                                Lihat detail
-                            </a>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Right: Status Pembayaran Breakdown -->
-            <div class="card-box">
-                <div class="card-box-header">
-                    <h2 class="card-box-title">Status pembayaran</h2>
-                    <a href="{{ route('rekapitulasi.index') }}" class="card-box-link">Lihat rincian</a>
-                </div>
-
-                <div class="status-progress-list">
-                    @foreach ($statusPembayaran as $key => $st)
-                        <div class="status-progress-item">
-                            <div class="status-row-label">
-                                <span class="status-name">{{ $st['label'] }}</span>
-                                <span class="status-count-pct">{{ $st['count'] }} kuitansi • {{ $st['pct'] }}%</span>
-                            </div>
-                            <div class="progress-track">
-                                <div class="progress-fill" style="width: {{ $st['pct'] }}%; background: {{ $st['color'] }};"></div>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
-                <div class="status-footer-row">
-                    <span class="status-footer-label">Total nilai tercatat</span>
-                    <span class="status-footer-value">Rp{{ number_format($totalNilaiTercatat, 0, ',', '.') }}</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Bottom Row: Perlu Perhatian vs Aktivitas Terbaru -->
-        <div class="content-grid-row">
-            <!-- Left: Perlu Perhatian List -->
-            <div class="card-box">
-                <div class="card-box-header">
-                    <h2 class="card-box-title">Perlu perhatian</h2>
-                    <a href="{{ route('jatuh-tempo.index') }}" class="card-box-link">Lihat semua</a>
-                </div>
-
-                <div class="perhatian-list">
-                    @forelse ($itemsPerluPerhatian as $item)
-                        <a href="{{ route('jatuh-tempo.index', ['selected' => $item->id]) }}" class="perhatian-item">
-                            <div class="perhatian-left">
-                                <div class="perhatian-icon-box {{ $item->tempo_code === 'terlambat' ? 'red' : 'amber' }}">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
+        <div class="grid">
+            <div class="col">
+                <div class="row-top">
+                    <section class="posisi" aria-labelledby="judul-posisi">
+                        <div>
+                            <div class="judul" id="judul-posisi">Posisi bersih toko</div>
+                            <div class="rumus">Sisa piutang dikurangi sisa utang</div>
+                            <div class="nilai">{{ $rp($posisiBersih) }}</div>
+                            <div class="pecahan">
+                                <div>
+                                    <small>Sisa piutang</small>
+                                    <b>{{ $rp($sisaPiutang) }}</b>
+                                    <em>Belum dibayar pelanggan · {{ $jumlahPiutang }} kuitansi</em>
                                 </div>
                                 <div>
-                                    <div class="perhatian-party">{{ $item->nama_pihak }}</div>
-                                    <div class="perhatian-meta">{{ $item->nomor_kuitansi }} • Tempo {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->translatedFormat('d M Y') }}</div>
+                                    <small>Sisa utang</small>
+                                    <b>{{ $rp($sisaUtang) }}</b>
+                                    <em>Belum dibayar toko · {{ $jumlahUtang }} kuitansi</em>
                                 </div>
                             </div>
-                            <div class="perhatian-right">
-                                <div class="perhatian-nominal">Rp{{ number_format($item->sisa, 0, ',', '.') }}</div>
-                                <div class="perhatian-tempo {{ $item->tempo_code === 'terlambat' ? 'red' : 'amber' }}">{{ $item->tempo_label }}</div>
-                            </div>
-                        </a>
-                    @empty
-                        <div style="padding: 24px 16px; text-align: center; color: #6b7280; font-size: 13px;">
-                            Tidak ada tagihan yang memerlukan perhatian saat ini.
                         </div>
-                    @endforelse
+                        <div class="pemilik">{{ $namaPengguna }} · Owner</div>
+                    </section>
+
+                    <section aria-labelledby="judul-terdekat">
+                        <div class="section-head">
+                            <h2 id="judul-terdekat">Jatuh tempo terdekat</h2>
+                            <a href="{{ route('jatuh-tempo.index') }}" class="pill-link">Lihat semua</a>
+                        </div>
+                        <div class="mini-list">
+                            @forelse ($terdekat as $item)
+                                <a href="{{ route('jatuh-tempo.index', ['selected' => $item->id]) }}" class="mini">
+                                    <span class="ikon" aria-hidden="true">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                    </span>
+                                    <b>{{ $item->nama_pihak }}</b>
+                                    <span>{{ $item->jenis === 'piutang' ? 'Piutang' : 'Utang' }} · {{ $item->badge }}</span>
+                                    <strong>{{ $rp($item->sisa) }}</strong>
+                                </a>
+                            @empty
+                                <div class="kosong">Belum ada tagihan yang akan jatuh tempo.</div>
+                            @endforelse
+                        </div>
+                    </section>
                 </div>
+
+                <section aria-labelledby="judul-perhatian">
+                    <div class="section-head">
+                        <div>
+                            <h2 id="judul-perhatian">Perlu perhatian</h2>
+                            <span class="hint">Terlambat atau jatuh tempo dalam {{ \App\Models\Kuitansi::HARI_PENGINGAT }} hari ke depan</span>
+                        </div>
+                        <a href="{{ route('jatuh-tempo.index') }}" class="pill-link">Lihat semua</a>
+                    </div>
+                    <div class="daftar">
+                        @forelse ($pengingat->take(6) as $item)
+                            <a href="{{ route('jatuh-tempo.index', ['selected' => $item->id]) }}" class="baris">
+                                <span class="ikon" aria-hidden="true">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                </span>
+                                <span class="info">
+                                    <b>{{ $item->nama_pihak }}</b>
+                                    <span>{{ $item->nomor_kuitansi }} · Tempo {{ \Carbon\Carbon::parse($item->tanggal_jatuh_tempo)->translatedFormat('d M Y') }}</span>
+                                </span>
+                                <span class="jenis">{{ $item->jenis === 'piutang' ? 'Piutang' : 'Utang' }}</span>
+                                <span class="nominal">{{ $rp($item->sisa) }}</span>
+                                <span class="badge {{ $item->badge_kelas }}">{{ $item->badge }}</span>
+                            </a>
+                        @empty
+                            <div class="kosong">Tidak ada tagihan yang memerlukan perhatian saat ini.</div>
+                        @endforelse
+                    </div>
+                </section>
             </div>
 
-            <!-- Right: Aktivitas Terbaru -->
-            <div class="card-box">
-                <div class="card-box-header">
-                    <h2 class="card-box-title">Aktivitas terbaru</h2>
-                </div>
+            <aside class="panel" aria-label="Ringkasan pembayaran">
+                <section aria-labelledby="judul-dibayar">
+                    <div class="dibayar-head">
+                        <div>
+                            <h3 id="judul-dibayar">Dibayar bulan ini</h3>
+                            <div class="sub">Total pembayaran yang dicatat</div>
+                            <div class="nilai">{{ $rp($dibayarBulanIni) }}</div>
+                        </div>
+                        <span class="chip">{{ $tanggalAcuan->translatedFormat('M Y') }}</span>
+                    </div>
 
-                <div class="aktivitas-list">
-                    @forelse ($aktivitasTerbaru as $aktivitas)
-                        <div class="aktivitas-item">
-                            <div class="aktivitas-icon-box" style="background: {{ $aktivitas['badge_bg'] }}; color: {{ $aktivitas['badge_color'] }};">
-                                @if ($aktivitas['type'] === 'cicilan')
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="9"></circle>
-                                        <path d="M12 6v12M15 9.5H10.5a2 2 0 0 0 0 4h3a2 2 0 0 1 0 4H9"></path>
-                                    </svg>
-                                @elseif ($aktivitas['type'] === 'kuitansi')
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                        <line x1="12" y1="18" x2="12" y2="12"></line>
-                                        <line x1="9" y1="15" x2="15" y2="15"></line>
-                                    </svg>
-                                @else
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                                    </svg>
-                                @endif
-                            </div>
-                            <div class="aktivitas-content">
-                                <div class="aktivitas-title">{{ $aktivitas['title'] }}</div>
-                                <div class="aktivitas-meta">{{ $aktivitas['subtitle'] }}</div>
-                                <div class="aktivitas-time">{{ $aktivitas['time'] }}</div>
-                            </div>
+                    <div class="legenda">
+                        <span class="masuk"><i></i>Piutang masuk (dari pelanggan) {{ $rp($piutangMasukBulanIni) }}</span>
+                        <span class="keluar"><i></i>Utang keluar (ke supplier) {{ $rp($utangKeluarBulanIni) }}</span>
+                    </div>
+
+                    <svg class="grafik" viewBox="0 0 300 120" role="img" aria-label="Grafik pembayaran 6 bulan terakhir: piutang masuk dan utang keluar">
+                        <line x1="12" y1="96" x2="288" y2="96" stroke="rgba(42,42,92,0.15)" stroke-width="1"></line>
+                        <path d="{{ $grafik['path_piutang'] }}" fill="none" stroke="#2a2a5c" stroke-width="2.4" stroke-linecap="round"></path>
+                        <path d="{{ $grafik['path_utang'] }}" fill="none" stroke="#d12f4d" stroke-width="2.4" stroke-linecap="round"></path>
+                        @foreach ($grafik['bulan'] as $b)
+                            <text x="{{ $b['x'] }}" y="114" text-anchor="middle" font-size="9.5" font-weight="600" fill="#6b6b86">{{ $b['label'] }}</text>
+                            <circle cx="{{ $b['x'] }}" cy="{{ $b['y_piutang'] }}" r="3" fill="#2a2a5c"><title>{{ $b['label_penuh'] }} · piutang masuk {{ $rp($b['piutang']) }}</title></circle>
+                            <circle cx="{{ $b['x'] }}" cy="{{ $b['y_utang'] }}" r="3" fill="#d12f4d"><title>{{ $b['label_penuh'] }} · utang keluar {{ $rp($b['utang']) }}</title></circle>
+                        @endforeach
+                    </svg>
+                </section>
+
+                <section aria-labelledby="judul-status">
+                    <div class="section-head" style="margin-bottom: 10px;">
+                        <h3 id="judul-status">Status pembayaran</h3>
+                        <a href="{{ route('rekapitulasi.index') }}" class="pill-link">Lihat rekap</a>
+                    </div>
+                    @foreach ($statusPembayaran as $st)
+                        <div class="status-item">
+                            <div class="baris-status"><span>{{ $st['label'] }}</span><span>{{ $st['count'] }} kuitansi</span></div>
+                            <div class="track"><div style="width: {{ $st['pct'] }}%; background: {{ $st['color'] }};"></div></div>
                         </div>
-                    @empty
-                        <div class="aktivitas-item">
-                            <div class="aktivitas-content">
-                                <div class="aktivitas-meta">Belum ada aktivitas.</div>
-                            </div>
-                        </div>
-                    @endforelse
-                </div>
-            </div>
+                    @endforeach
+                    <div class="total">
+                        <div><span>Total nilai tercatat</span><b>{{ $rp($totalNilaiTercatat) }}</b></div>
+                        <div><span>Sudah dibayar</span><b>{{ $rp($totalTerbayar) }}</b></div>
+                        <div><span>Belum dibayar (sisa piutang + sisa utang)</span><b>{{ $rp($totalSisa) }}</b></div>
+                    </div>
+                </section>
+
+                <section aria-labelledby="judul-aktivitas">
+                    <div class="section-head" style="margin-bottom: 0;">
+                        <h3 id="judul-aktivitas">Aktivitas terbaru</h3>
+                        <a href="{{ route('arsip-kuitansi.index') }}" class="pill-link">Lihat arsip</a>
+                    </div>
+                    <div class="aktivitas">
+                        @forelse ($aktivitasTerbaru as $a)
+                            <div class="item"><b>{{ $a['judul'] }}</b><span>{{ $a['subjudul'] }}</span></div>
+                        @empty
+                            <div class="kosong">Belum ada aktivitas.</div>
+                        @endforelse
+                    </div>
+                </section>
+            </aside>
         </div>
     </main>
+</div>
 
-    <!-- Modal Tambah Kuitansi Quick View -->
-    <div class="modal-backdrop" id="tambahKuitansiModal" onclick="if(event.target === this) closeTambahModal()">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <div style="width: 34px; height: 34px; border-radius: 8px; background: #fdf2f4; color: #91283b; display: flex; align-items: center; justify-content: center;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="12" y1="18" x2="12" y2="12"></line>
-                            <line x1="9" y1="15" x2="15" y2="15"></line>
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 class="modal-title" style="margin: 0;">Tambah Kuitansi Baru</h3>
-                        <p style="margin: 2px 0 0; font-size: 12px; color: #696b78;">Pencatatan kuitansi utang atau piutang toko</p>
-                    </div>
-                </div>
-                <button type="button" class="modal-close-btn" onclick="closeTambahModal()" aria-label="Tutup dialog">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                </button>
-            </div>
-
-            <div style="display: grid; gap: 12px; margin-bottom: 20px;">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div>
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nomor Kuitansi</label>
-                        <input type="text" value="KWT-240929" readonly style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px; background: #f9fafb; color: #4b5563;">
-                    </div>
-                    <div style="position: relative;">
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Jenis Transaksi</label>
-                        <input type="hidden" name="modal_jenis" id="modal_jenis" value="piutang">
-                        <div class="modal-custom-select" id="modalJenisSelect" onclick="toggleModalDropdown(this, event)">
-                            <span id="modalJenisLabel">Piutang Pelanggan</span>
-                            <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                            <div class="custom-dropdown-menu" onclick="event.stopPropagation()">
-                                <div class="custom-dropdown-item is-selected" onclick="chooseModalOption('piutang', 'Piutang Pelanggan', event)">
-                                    <span>Piutang Pelanggan</span>
-                                    <svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <polyline points="20 6 9 17 4 12"></polyline>
-                                    </svg>
-                                </div>
-                                <div class="custom-dropdown-item" onclick="chooseModalOption('utang', 'Utang Supplier', event)">
-                                    <span>Utang Supplier</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nama Pihak / Toko</label>
-                    <input type="text" placeholder="Contoh: Toko Berkah Jaya" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div>
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Nominal (Rp)</label>
-                        <input type="number" placeholder="0" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
-                    </div>
-                    <div>
-                        <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Tanggal Jatuh Tempo</label>
-                        <input type="date" value="{{ date('Y-m-d', strtotime('+7 days')) }}" style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
-                    </div>
-                </div>
-
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 4px;">Catatan Transaksi</label>
-                    <input type="text" placeholder="Keterangan singkat nota..." style="width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
-                </div>
-            </div>
-
-            <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center; border-top: 1px solid #f1f2f5; padding-top: 16px;">
-                <a href="{{ route('jatuh-tempo.index') }}" style="font-size: 12px; color: #91283b; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    Lihat daftar jatuh tempo
-                </a>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" class="btn-lihat-detail" onclick="closeTambahModal()">Batal</button>
-                    <a href="{{ route('jatuh-tempo.index') }}" class="btn-tambah-kuitansi" style="text-decoration: none;">Kelola di Jatuh Tempo</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        function openTambahModal() {
-            document.getElementById('tambahKuitansiModal').style.display = 'flex';
-        }
-        document.addEventListener('DOMContentLoaded', function () {
-    const params = new URLSearchParams(window.location.search);
-
-    if (params.get('tambah') === '1') {
-        openTambahModal();
-    }
-});
-        function closeTambahModal() {
-            document.getElementById('tambahKuitansiModal').style.display = 'none';
-            const selectEl = document.getElementById('modalJenisSelect');
-            if (selectEl) selectEl.classList.remove('is-open');
-        }
-
-        function toggleModalDropdown(el, e) {
-            if (e) e.stopPropagation();
-            el.classList.toggle('is-open');
-        }
-
-        function chooseModalOption(val, label, e) {
-            if (e) e.stopPropagation();
-            document.getElementById('modal_jenis').value = val;
-            document.getElementById('modalJenisLabel').textContent = label;
-            const container = document.getElementById('modalJenisSelect');
-            container.classList.remove('is-open');
-            container.querySelectorAll('.custom-dropdown-item').forEach(item => {
-                const isSelected = item.textContent.trim().startsWith(label);
-                item.classList.toggle('is-selected', isSelected);
-                let check = item.querySelector('.dropdown-check');
-                if (isSelected && !check) {
-                    item.insertAdjacentHTML('beforeend', '<svg class="dropdown-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>');
-                } else if (!isSelected && check) {
-                    check.remove();
-                }
-            });
-        }
-
-        // Buka modal otomatis kalau datang dari menu "Kuitansi Baru" (?tambah=1)
-        if (new URLSearchParams(window.location.search).has('tambah')) {
-            openTambahModal();
-        }
-
-        // Toast pengingat hilang otomatis setelah 12 detik
-        const toastPengingat = document.getElementById('toastPengingat');
-        if (toastPengingat) {
-            setTimeout(() => toastPengingat.remove(), 12000);
-        }
-
-        document.addEventListener('click', function(e) {
-            if (!e.target.closest('.modal-custom-select')) {
-                document.querySelectorAll('.modal-custom-select.is-open').forEach(el => el.classList.remove('is-open'));
-            }
-        });
-
-        window.addEventListener('DOMContentLoaded', function() {
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('action') === 'tambah' || window.location.hash === '#tambah') {
-                openTambahModal();
-            }
-        });
-    </script>
+<script>
+    // Toast pengingat hilang otomatis setelah 12 detik
+    (function () {
+        var toast = document.getElementById('toastPengingat');
+        if (toast) { setTimeout(function () { toast.remove(); }, 12000); }
+    })();
+</script>
 </body>
 </html>

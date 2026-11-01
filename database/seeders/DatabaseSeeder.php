@@ -67,7 +67,7 @@ class DatabaseSeeder extends Seeder
             [
                 'nomor_kuitansi' => 'KWT-240918',
                 'nama_pihak' => 'Warung Bu Sari',
-                'role_pihak' => 'Pelanggan berutang kepada Toko Tempo',
+                'role_pihak' => 'Pelanggan berutang kepada Toko Sukses Abadi',
                 'jenis' => 'piutang',
                 'nominal_transaksi' => 8750000,
                 'status_pembayaran' => 'cicilan',

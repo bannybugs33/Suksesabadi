@@ -17,7 +17,7 @@ class DemoSeeder extends Seeder
             'name' => 'Andi Saputra',
             'username' => 'andi.owner',
             'role' => 'owner',
-            'store_name' => 'Toko Tempo',
+            'store_name' => 'Toko Sukses Abadi',
             'password' => 'password',
         ]);
 

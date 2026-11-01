@@ -1,4 +1,4 @@
-# Toko Sukses Abadi (Toko Tempo)
+# Toko Sukses Abadi (Toko Sukses Abadi)
 
 Sistem pencatatan keuangan, monitoring arus kas, serta manajemen utang dan piutang berbasis web. Aplikasi ini dirancang khusus untuk memantau jatuh tempo tagihan pelanggan dan kewajiban supplier secara akurat dan real-time, lengkap dengan riwayat pembayaran bertahap dan pengelolaan bukti kuitansi.
 

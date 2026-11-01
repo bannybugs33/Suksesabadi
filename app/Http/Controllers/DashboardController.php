@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Kuitansi;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -12,114 +13,160 @@ use Illuminate\View\View;
 class DashboardController extends Controller
 {
     /**
-     * Tampilkan halaman utama dashboard Toko Tempo.
-     * Seluruh angka dihitung dari database (tanpa data dummy).
+     * Tampilkan Dashboard Toko Sukses Abadi.
+     *
+     * Semua angka dihitung dari data nyata (tabel kuitansi dan pembayaran), dengan aturan
+     * yang sama seperti Arsip, Jatuh Tempo, dan Rekapitulasi:
+     *  - terbayar = jumlah pembayaran, sisa = nominal transaksi - terbayar;
+     *  - tagihan "aktif" = yang masih bersisa (sisa > 0);
+     *  - pengingat = aktif dan terlambat atau jatuh tempo dalam 7 hari (Kuitansi::HARI_PENGINGAT).
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $userId = Auth::id() ?? 1;
-        $tanggalAcuan = request()->filled('tanggal_acuan')
-            ? Carbon::parse(request()->query('tanggal_acuan'))->startOfDay()
+        $tanggalAcuan = $request->filled('tanggal_acuan')
+            ? Carbon::parse($request->query('tanggal_acuan'))->startOfDay()
             : Carbon::now()->startOfDay();
 
-        // Total pembayaran dan tanggal pembayaran terakhir per kuitansi
+        $semua = $this->ambilKuitansi($userId, $tanggalAcuan);
+        $aktif = $semua->filter(fn ($k) => $k->sisa > 0);
+
+        // Sisa piutang (uang toko yang belum dibayar pelanggan) dan sisa utang (yang belum dibayar toko).
+        $piutang = $aktif->where('jenis', 'piutang');
+        $utang = $aktif->where('jenis', 'utang');
+
+        $sisaPiutang = (float) $piutang->sum('sisa');
+        $sisaUtang = (float) $utang->sum('sisa');
+
+        // Pengingat H-7: yang paling mendesak (paling awal jatuh tempo) tampil lebih dulu.
+        $pengingat = $aktif
+            ->whereIn('tempo_code', Kuitansi::KODE_PENGINGAT)
+            ->sortBy([['tanggal_jatuh_tempo', 'asc'], ['id', 'asc']])
+            ->values();
+
+        // Jatuh tempo terdekat: dua tagihan aktif yang belum lewat, mulai dari yang paling dekat.
+        $terdekat = $aktif
+            ->filter(fn ($k) => $k->tanggal_jatuh_tempo
+                && Carbon::parse($k->tanggal_jatuh_tempo)->startOfDay()->gte($tanggalAcuan))
+            ->sortBy([['tanggal_jatuh_tempo', 'asc'], ['id', 'asc']])
+            ->take(2)
+            ->values();
+
+        $grafik = $this->buatGrafik($userId, $tanggalAcuan);
+        $bulanIni = end($grafik['bulan']);
+
+        return view('dashboard', [
+            'tanggalAcuan' => $tanggalAcuan,
+            'salam' => $this->salam(),
+            'sisaPiutang' => $sisaPiutang,
+            'jumlahPiutang' => $piutang->count(),
+            'sisaUtang' => $sisaUtang,
+            'jumlahUtang' => $utang->count(),
+            'posisiBersih' => $sisaPiutang - $sisaUtang,
+            'pengingat' => $pengingat,
+            'perluPerhatianCount' => $pengingat->count(),
+            'terlambatCount' => $pengingat->where('tempo_code', 'terlambat')->count(),
+            'terdekat' => $terdekat,
+            'grafik' => $grafik,
+            'dibayarBulanIni' => $bulanIni['piutang'] + $bulanIni['utang'],
+            'piutangMasukBulanIni' => $bulanIni['piutang'],
+            'utangKeluarBulanIni' => $bulanIni['utang'],
+            'statusPembayaran' => $this->buatStatusPembayaran($semua),
+            'totalNilaiTercatat' => (float) $semua->sum('nominal_transaksi'),
+            'totalTerbayar' => (float) $semua->sum('terbayar'),
+            'totalSisa' => $sisaPiutang + $sisaUtang,
+            'aktivitasTerbaru' => $this->buatAktivitasTerbaru($userId, $semua),
+        ]);
+    }
+
+    /**
+     * Seluruh kuitansi milik owner beserta total terbayar, sisa, dan kode tempo.
+     *
+     * @return Collection<int, object>
+     */
+    private function ambilKuitansi(int $userId, Carbon $tanggalAcuan): Collection
+    {
         $pembayaran = DB::table('pembayaran')
             ->select('kuitansi_id')
             ->selectRaw('SUM(nominal) AS total_terbayar')
             ->selectRaw('MAX(tanggal_pembayaran) AS terakhir_bayar')
             ->groupBy('kuitansi_id');
 
-        $kuitansi = DB::table('kuitansi as k')
+        return DB::table('kuitansi as k')
             ->leftJoinSub($pembayaran, 'p', function ($join) {
                 $join->on('k.id', '=', 'p.kuitansi_id');
             })
             ->where('k.user_id', $userId)
             ->select('k.*')
             ->selectRaw('COALESCE(p.total_terbayar, 0) AS terbayar')
-            ->selectRaw('k.nominal_transaksi - COALESCE(p.total_terbayar, 0) AS sisa')
+            ->selectRaw('ROUND(k.nominal_transaksi - COALESCE(p.total_terbayar, 0), 2) AS sisa')
             ->selectRaw('p.terakhir_bayar AS terakhir_bayar')
             ->orderByDesc('k.tanggal_kuitansi')
-            ->get();
+            ->orderByDesc('k.id')
+            ->get()
+            ->map(function ($item) use ($tanggalAcuan) {
+                $item->sisa = (float) $item->sisa;
+                $item->terbayar = (float) $item->terbayar;
 
-        $kuitansi->transform(function ($item) use ($tanggalAcuan) {
-            $tempo = Kuitansi::infoTempo($item->tanggal_jatuh_tempo, $item->status_pembayaran, $tanggalAcuan);
+                // Tagihan yang sudah tidak bersisa dianggap aman, apa pun isi kolom statusnya.
+                $tempo = Kuitansi::infoTempo(
+                    $item->tanggal_jatuh_tempo,
+                    $item->sisa > 0 ? $item->status_pembayaran : 'lunas',
+                    $tanggalAcuan
+                );
 
-            $item->tempo_label = $tempo['label'];
-            $item->tempo_code = $tempo['code'];
+                $item->tempo_code = $tempo['code'];
+                $item->tempo_label = $tempo['label'];
+                [$item->badge, $item->badge_kelas] = $this->badgeTempo($item, $tanggalAcuan);
 
-            return $item;
-        });
-
-        $belumLunas = $kuitansi->where('status_pembayaran', '!=', 'lunas');
-
-        // Kuitansi yang perlu perhatian: sudah terlambat atau jatuh tempo dalam 3 hari (H-3).
-        // Diurutkan dari jatuh tempo paling awal agar yang paling mendesak tampil lebih dulu.
-        $itemsPerluPerhatian = $belumLunas
-            ->whereIn('tempo_code', Kuitansi::KODE_PENGINGAT)
-            ->sortBy('tanggal_jatuh_tempo')
-            ->values();
-
-        $perluPerhatianCount = $itemsPerluPerhatian->count();
-        $terlambatCount = $itemsPerluPerhatian->where('tempo_code', 'terlambat')->count();
-        $besokCount = $itemsPerluPerhatian->where('tempo_code', 'h-1')->count();
-
-        // Popup pengingat: prioritaskan yang sudah terlambat paling lama, lalu yang terdekat.
-        $popupItem = $itemsPerluPerhatian->first();
-
-        // 4 kartu metrik utama
-        $piutangAktif = $belumLunas->where('jenis', 'piutang');
-        $utangAktif = $belumLunas->where('jenis', 'utang');
-
-        $sisaPiutangPelanggan = (float) $piutangAktif->sum('sisa');
-        $kuitansiPelangganCount = $piutangAktif->count();
-
-        $sisaUtangSupplier = (float) $utangAktif->sum('sisa');
-        $kuitansiSupplierCount = $utangAktif->count();
-
-        $awalBulan = $tanggalAcuan->copy()->startOfMonth();
-        $akhirBulan = $tanggalAcuan->copy()->endOfMonth();
-        $lunasBulanIniItems = $kuitansi
-            ->where('status_pembayaran', 'lunas')
-            ->filter(fn ($item) => $item->terakhir_bayar
-                && Carbon::parse($item->terakhir_bayar)->between($awalBulan, $akhirBulan));
-
-        $lunasBulanIni = (float) $lunasBulanIniItems->sum('nominal_transaksi');
-        $lunasBulanIniCount = $lunasBulanIniItems->count();
-
-        $totalNilaiTercatat = (float) $kuitansi->sum('nominal_transaksi');
-
-        $chartData = $this->buatChartData($userId, $tanggalAcuan);
-        $statusPembayaran = $this->buatStatusPembayaran($kuitansi);
-        $aktivitasTerbaru = $this->buatAktivitasTerbaru($userId, $kuitansi, $tanggalAcuan);
-
-        return view('dashboard', compact(
-            'tanggalAcuan',
-            'popupItem',
-            'kuitansi',
-            'itemsPerluPerhatian',
-            'perluPerhatianCount',
-            'terlambatCount',
-            'besokCount',
-            'sisaPiutangPelanggan',
-            'kuitansiPelangganCount',
-            'sisaUtangSupplier',
-            'kuitansiSupplierCount',
-            'lunasBulanIni',
-            'lunasBulanIniCount',
-            'totalNilaiTercatat',
-            'chartData',
-            'statusPembayaran',
-            'aktivitasTerbaru'
-        ));
+                return $item;
+            });
     }
 
     /**
-     * Arus piutang masuk dan utang keluar (nilai pembayaran) selama 6 bulan terakhir.
-     * 'piutang' dan 'utang' berisi tinggi batang dalam persen, '*_nominal' berisi nilai asli.
+     * Teks singkat untuk badge tempo dan warna yang dipakai.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{0: string, 1: string}
      */
-    private function buatChartData(int $userId, Carbon $tanggalAcuan): array
+    private function badgeTempo(object $item, Carbon $tanggalAcuan): array
+    {
+        if (! $item->tanggal_jatuh_tempo) {
+            return ['Tanpa tempo', 'netral'];
+        }
+
+        $tempo = Carbon::parse($item->tanggal_jatuh_tempo)->startOfDay();
+        $selisih = (int) abs($tanggalAcuan->diffInDays($tempo));
+
+        return match (true) {
+            $tempo->lt($tanggalAcuan) => ["Terlambat {$selisih} hari", 'merah'],
+            $selisih === 0 => ['Hari ini', 'kuning'],
+            $selisih <= Kuitansi::HARI_PENGINGAT => ["H-{$selisih}", 'kuning'],
+            default => ["{$selisih} hari lagi", 'netral'],
+        };
+    }
+
+    /**
+     * Sapaan sesuai jam saat ini (zona waktu aplikasi).
+     */
+    private function salam(): string
+    {
+        $jam = (int) Carbon::now()->format('G');
+
+        return match (true) {
+            $jam >= 4 && $jam <= 10 => 'Selamat pagi',
+            $jam >= 11 && $jam <= 14 => 'Selamat siang',
+            $jam >= 15 && $jam <= 17 => 'Selamat sore',
+            default => 'Selamat malam',
+        };
+    }
+
+    /**
+     * Pembayaran 6 bulan terakhir, dipisah menjadi piutang masuk dan utang keluar,
+     * berikut koordinat grafik garis (SVG 300x120). Diambil dari tanggal pembayaran.
+     *
+     * @return array{bulan: array<int, array<string, mixed>>, path_piutang: string, path_utang: string}
+     */
+    private function buatGrafik(int $userId, Carbon $tanggalAcuan): array
     {
         $jumlahBulan = 6;
         $awal = $tanggalAcuan->copy()->startOfMonth()->subMonths($jumlahBulan - 1);
@@ -131,49 +178,64 @@ class DashboardController extends Controller
             ->get(['p.nominal', 'p.tanggal_pembayaran', 'k.jenis'])
             ->groupBy(fn ($row) => Carbon::parse($row->tanggal_pembayaran)->format('Y-m'));
 
-        $data = [];
+        $bulan = [];
         for ($i = 0; $i < $jumlahBulan; $i++) {
-            $bulan = $awal->copy()->addMonths($i);
-            $baris = $perBulan->get($bulan->format('Y-m'), collect());
+            $tanggal = $awal->copy()->addMonths($i);
+            $baris = $perBulan->get($tanggal->format('Y-m'), collect());
 
-            $data[] = [
-                'bulan' => $bulan->translatedFormat('M'),
-                'piutang_nominal' => (float) $baris->where('jenis', 'piutang')->sum('nominal'),
-                'utang_nominal' => (float) $baris->where('jenis', 'utang')->sum('nominal'),
-                'piutang' => 0,
-                'utang' => 0,
+            $bulan[] = [
+                'label' => $tanggal->translatedFormat('M'),
+                'label_penuh' => $tanggal->translatedFormat('F Y'),
+                'piutang' => (float) $baris->where('jenis', 'piutang')->sum('nominal'),
+                'utang' => (float) $baris->where('jenis', 'utang')->sum('nominal'),
             ];
         }
 
-        $maks = max(array_merge(
-            array_column($data, 'piutang_nominal'),
-            array_column($data, 'utang_nominal')
-        ));
+        $maks = max(1.0, ...array_merge(array_column($bulan, 'piutang'), array_column($bulan, 'utang')));
 
-        foreach ($data as $i => $baris) {
-            foreach (['piutang', 'utang'] as $jenis) {
-                $nilai = $baris["{$jenis}_nominal"];
-                $data[$i][$jenis] = ($maks > 0 && $nilai > 0)
-                    ? max((int) round($nilai / $maks * 100), 3)
-                    : 0;
-            }
+        foreach ($bulan as $i => $b) {
+            $bulan[$i]['x'] = round(24 + $i * (252 / ($jumlahBulan - 1)), 1);
+            $bulan[$i]['y_piutang'] = round(96 - ($b['piutang'] / $maks) * 72, 1);
+            $bulan[$i]['y_utang'] = round(96 - ($b['utang'] / $maks) * 72, 1);
         }
 
-        return $data;
+        return [
+            'bulan' => $bulan,
+            'path_piutang' => $this->jalurHalus(array_column($bulan, 'x'), array_column($bulan, 'y_piutang')),
+            'path_utang' => $this->jalurHalus(array_column($bulan, 'x'), array_column($bulan, 'y_utang')),
+        ];
     }
 
     /**
-     * Rincian jumlah kuitansi per status pembayaran.
+     * Jalur SVG berkurva halus melalui titik-titik (kurva Bezier dengan kontrol di tengah sumbu x).
+     *
+     * @param  array<int, float>  $xs
+     * @param  array<int, float>  $ys
+     */
+    private function jalurHalus(array $xs, array $ys): string
+    {
+        $d = "M{$xs[0]},{$ys[0]}";
+
+        for ($i = 1, $n = count($xs); $i < $n; $i++) {
+            $tengah = round(($xs[$i - 1] + $xs[$i]) / 2, 1);
+            $d .= " C{$tengah},{$ys[$i - 1]} {$tengah},{$ys[$i]} {$xs[$i]},{$ys[$i]}";
+        }
+
+        return $d;
+    }
+
+    /**
+     * Jumlah kuitansi per status pembayaran (semua kuitansi, sama dengan filter status di Arsip).
      *
      * @return array<string, array<string, mixed>>
      */
     private function buatStatusPembayaran(Collection $kuitansi): array
     {
         $definisi = [
-            'lunas' => ['Lunas', '#474e68'],
-            'cicilan' => ['Cicilan', '#1f5f8b'],
-            'dp' => ['DP', '#b45309'],
-            'belum_lunas' => ['Belum lunas', '#91283b'],
+            'lunas' => ['Lunas', '#2a2a5c'],
+            'cicilan' => ['Cicilan', '#4c3a78'],
+            'dp' => ['DP', '#7b4768'],
+            'belum_lunas' => ['Belum lunas', '#a3153f'],
         ];
 
         $total = $kuitansi->count();
@@ -196,9 +258,9 @@ class DashboardController extends Controller
     /**
      * Aktivitas terbaru: pembayaran dicatat, kuitansi baru, dan kuitansi lunas.
      *
-     * @return array<int, array<string, mixed>>
+     * @return array<int, array<string, string>>
      */
-    private function buatAktivitasTerbaru(int $userId, Collection $kuitansi, Carbon $tanggalAcuan): array
+    private function buatAktivitasTerbaru(int $userId, Collection $kuitansi): array
     {
         $rupiah = fn ($nilai) => 'Rp'.number_format((float) $nilai, 0, ',', '.');
         $aktivitas = collect();
@@ -213,49 +275,27 @@ class DashboardController extends Controller
 
         foreach ($pembayaranTerbaru as $baris) {
             $aktivitas->push([
-                'type' => 'cicilan',
-                'title' => 'Pembayaran dicatat',
-                'subtitle' => $baris->nama_pihak.' • '.$rupiah($baris->nominal),
+                'judul' => 'Pembayaran '.$rupiah($baris->nominal).' dicatat',
+                'nama' => $baris->nama_pihak,
                 'tanggal' => Carbon::parse($baris->tanggal_pembayaran),
-                'badge_bg' => '#f3f4f6',
-                'badge_color' => '#4b5563',
             ]);
         }
 
         foreach ($kuitansi->take(5) as $item) {
             $aktivitas->push([
-                'type' => 'kuitansi',
-                'title' => 'Kuitansi baru ditambahkan',
-                'subtitle' => $item->nama_pihak.' • '.$rupiah($item->nominal_transaksi),
+                'judul' => 'Kuitansi baru '.$rupiah($item->nominal_transaksi),
+                'nama' => $item->nama_pihak,
                 'tanggal' => Carbon::parse($item->tanggal_kuitansi),
-                'badge_bg' => '#fef2f2',
-                'badge_color' => '#ef4444',
-            ]);
-        }
-
-        foreach ($kuitansi->where('status_pembayaran', 'lunas')->whereNotNull('terakhir_bayar') as $item) {
-            $aktivitas->push([
-                'type' => 'lunas',
-                'title' => 'Kuitansi ditandai lunas',
-                'subtitle' => $item->nama_pihak.' • '.$rupiah($item->nominal_transaksi),
-                'tanggal' => Carbon::parse($item->terakhir_bayar),
-                'badge_bg' => '#eff6ff',
-                'badge_color' => '#3b82f6',
             ]);
         }
 
         return $aktivitas
             ->sortByDesc(fn ($a) => $a['tanggal']->timestamp)
             ->take(4)
-            ->map(function ($a) use ($tanggalAcuan) {
-                $a['time'] = match (true) {
-                    $a['tanggal']->isSameDay($tanggalAcuan) => 'Hari ini',
-                    $a['tanggal']->isSameDay($tanggalAcuan->copy()->subDay()) => 'Kemarin',
-                    default => $a['tanggal']->translatedFormat('d M Y'),
-                };
-
-                return $a;
-            })
+            ->map(fn ($a) => [
+                'judul' => $a['judul'],
+                'subjudul' => $a['nama'].' • '.$a['tanggal']->translatedFormat('d M Y'),
+            ])
             ->values()
             ->all();
     }

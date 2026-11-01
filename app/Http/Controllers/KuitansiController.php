@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class KuitansiController extends Controller
@@ -79,8 +80,23 @@ class KuitansiController extends Controller
             $buktiPath = $request->file('bukti')->store('kuitansi', Kuitansi::DISK_BUKTI);
         }
 
-        // Tentukan status pembayaran akhir
+        // Tentukan status pembayaran akhir.
+        // Aturan yang dijaga di server (bukan hanya di form) agar angka di Dashboard, Arsip,
+        // Jatuh Tempo, dan Rekapitulasi tidak berbeda untuk kuitansi yang sama:
+        //  - status Lunas berarti sudah dibayar penuh (sisa 0);
+        //  - nominal dibayar tidak boleh melebihi nominal transaksi (sisa tidak boleh negatif).
         $statusPembayaran = $validated['status_pembayaran'];
+
+        if ($statusPembayaran === 'lunas') {
+            $cleanNominalDibayar = $cleanNominalTransaksi;
+        }
+
+        if ($cleanNominalDibayar > $cleanNominalTransaksi) {
+            throw ValidationException::withMessages([
+                'nominal_dibayar' => 'Nominal dibayar tidak boleh melebihi nominal transaksi.',
+            ]);
+        }
+
         if ($statusPembayaran === 'belum_lunas' && $cleanNominalDibayar > 0) {
             $statusPembayaran = $cleanNominalDibayar >= $cleanNominalTransaksi ? 'lunas' : 'cicilan';
         }
@@ -107,7 +123,7 @@ class KuitansiController extends Controller
                 'tanggal_pembayaran' => $validated['tanggal_kuitansi'],
                 'metode_pembayaran' => 'Tunai',
                 'catatan' => 'Pembayaran awal ('.strtoupper($statusPembayaran).')',
-                'dicatat_oleh' => Auth::user()->name ?? 'Owner • Toko Tempo',
+                'dicatat_oleh' => Auth::user()->name ?? 'Owner • Toko Sukses Abadi',
             ]);
         }
 

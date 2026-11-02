@@ -26,11 +26,15 @@
         @endif
     </div>
 
+    @if (session('status'))
+        <div role="status" style="margin:0 0 16px;padding:12px 16px;border-radius:12px;background:#e9f6ef;color:#1f6b44;font-size:13px;font-weight:600;">{{ session('status') }}</div>
+    @endif
+
     <div class="stats">
         <div class="card">
             <div>
                 <small>STATUS PEMBAYARAN TERBARU</small>
-                <span class="badge {{ $kuitansi->status_pembayaran }}">{{ ucfirst(str_replace('_', ' ', $kuitansi->status_pembayaran)) }}</span>
+                <span class="badge {{ $kuitansi->status_pembayaran }}">{{ \App\Models\Kuitansi::labelStatus($kuitansi->status_pembayaran) }}</span>
                 <span style="font-size:11px;color:#777">Terbayar {{ $rp($terbayar) }} dari {{ $rp($kuitansi->nominal_transaksi) }}</span>
             </div>
         </div>
@@ -43,12 +47,13 @@
         <div>
             <div class="card">
                 <h3>Rincian transaksi</h3>
-                <div class="kv"><span>Nomor kuitansi</span><b>{{ $kuitansi->nomor_kuitansi }}</b></div>
+                <div class="kv"><span>Nomor arsip</span><b>{{ $kuitansi->nomor_kuitansi }}</b></div>
+                <div class="kv"><span>Nomor kuitansi fisik</span><b>{{ $kuitansi->nomor_kuitansi_fisik ?: '-' }}</b></div>
                 <div class="kv"><span>Tanggal kuitansi</span><b>{{ $kuitansi->tanggal_kuitansi->translatedFormat('d F Y') }}</b></div>
                 <div class="kv"><span>{{ $kuitansi->jenis === 'piutang' ? 'Pelanggan' : 'Supplier' }}</span><b>{{ $kuitansi->nama_pihak }}</b></div>
                 <div class="kv"><span>Jenis kuitansi</span><b>{{ ucfirst($kuitansi->jenis) }}</b></div>
                 <div class="kv"><span>Nominal transaksi</span><b>{{ $rp($kuitansi->nominal_transaksi) }}</b></div>
-                <div class="kv"><span>Status saat ini</span><b>{{ ucfirst(str_replace('_', ' ', $kuitansi->status_pembayaran)) }}</b></div>
+                <div class="kv"><span>Status saat ini</span><b>{{ \App\Models\Kuitansi::labelStatus($kuitansi->status_pembayaran) }}</b></div>
                 <div class="kv"><span>Tanggal jatuh tempo</span><b>{{ $kuitansi->tanggal_jatuh_tempo?->translatedFormat('d F Y') ?? '-' }}</b></div>
                 @if ($kuitansi->keterangan)
                     <div class="note"><span>Catatan transaksi</span>{{ $kuitansi->keterangan }}</div>

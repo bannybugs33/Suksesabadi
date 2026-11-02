@@ -7,6 +7,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -21,6 +23,7 @@ class KeterhubunganFiturTest extends TestCase
     {
         parent::setUp();
         Carbon::setTestNow(Carbon::parse('2026-09-29 09:42:00'));
+        Storage::fake('local');
     }
 
     protected function tearDown(): void
@@ -36,8 +39,8 @@ class KeterhubunganFiturTest extends TestCase
             'nama_pihak' => 'Toko Terhubung',
             'jenis' => 'piutang',
             'nominal_transaksi' => '1000000',
-            'status_pembayaran' => 'belum_lunas',
             'tanggal_jatuh_tempo' => '2026-10-03',
+            'bukti' => UploadedFile::fake()->create('struk.jpg', 100, 'image/jpeg'),
         ], $override);
     }
 
@@ -92,12 +95,13 @@ class KeterhubunganFiturTest extends TestCase
         $this->actingAs($owner)->get('/rekapitulasi')->assertSee('Toko Lunas Cepat');
     }
 
-    public function test_status_lunas_on_new_invoice_always_means_fully_paid(): void
+    public function test_fully_paid_new_invoice_is_lunas_with_a_payment_record(): void
     {
         $owner = User::factory()->create();
 
         $this->actingAs($owner)->post('/kuitansi/baru', $this->dataKuitansiBaru([
-            'nama_pihak' => 'Langsung Lunas', 'status_pembayaran' => 'lunas',
+            'nama_pihak' => 'Langsung Lunas', 'tanggal_jatuh_tempo' => null, 'nominal_dibayar' => '1000000',
+            'tanggal_pembayaran' => '2026-09-29', 'metode_pembayaran' => 'Tunai',
         ]))->assertRedirect();
 
         $kuitansi = Kuitansi::where('nama_pihak', 'Langsung Lunas')->firstOrFail();
@@ -113,6 +117,8 @@ class KeterhubunganFiturTest extends TestCase
 
         $this->actingAs($owner)->from('/kuitansi/baru')->post('/kuitansi/baru', $this->dataKuitansiBaru([
             'nominal_dibayar' => '1500000',
+            'tanggal_pembayaran' => '2026-09-29',
+            'metode_pembayaran' => 'Tunai',
         ]))->assertSessionHasErrors('nominal_dibayar');
 
         $this->assertDatabaseCount('kuitansi', 0);

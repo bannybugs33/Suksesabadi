@@ -103,7 +103,6 @@ class ProteksiAksesTest extends TestCase
             'nama_pihak' => 'Toko Berkah Abadi',
             'jenis' => 'piutang',
             'nominal_transaksi' => '150000',
-            'status_pembayaran' => 'belum_lunas',
             'tanggal_jatuh_tempo' => '2026-10-10',
             'bukti' => UploadedFile::fake()->create('struk.jpg', 100, 'image/jpeg'),
         ])->assertRedirect();

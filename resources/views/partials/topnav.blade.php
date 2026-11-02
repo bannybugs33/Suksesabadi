@@ -12,7 +12,8 @@
         'jatuh-tempo' => ['Jatuh tempo', route('jatuh-tempo.index')],
         'rekapitulasi' => ['Rekapitulasi', route('rekapitulasi.index')],
     ];
-    $badgePengingat = (int) ($badgePengingat ?? 0);
+    // Jika halaman tidak mengirim jumlahnya, hitung dengan aturan yang sama (Kuitansi::ringkasanPengingat).
+    $badgePengingat = (int) ($badgePengingat ?? \App\Models\Kuitansi::ringkasanPengingat(auth()->id())['jumlah']);
     $namaPengguna = auth()->user()->name ?? 'Owner';
     $kata = preg_split('/\s+/', trim($namaPengguna)) ?: [];
     $inisial = count($kata) > 1

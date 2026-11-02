@@ -33,5 +33,7 @@ Route::middleware(['auth', CegahCacheHalamanPrivat::class])->group(function () {
     Route::get('/arsip-kuitansi/{kuitansi}/bukti', [ArsipKuitansiController::class, 'bukti'])->name('arsip-kuitansi.bukti');
     Route::get('/kuitansi/baru', [KuitansiController::class, 'create'])->name('kuitansi.create');
     Route::post('/kuitansi/baru', [KuitansiController::class, 'store'])->name('kuitansi.store');
+    Route::get('/kuitansi/nomor-sementara', [KuitansiController::class, 'nomorSementara'])->name('kuitansi.nomor-sementara');
+    Route::post('/kuitansi/cek-duplikat', [KuitansiController::class, 'cekDuplikat'])->name('kuitansi.cek-duplikat');
     Route::get('/rekapitulasi', [RekapitulasiController::class, 'index'])->name('rekapitulasi.index');
 });

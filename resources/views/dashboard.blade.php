@@ -257,7 +257,7 @@
                         </div>
                         <div class="mini-list">
                             @forelse ($terdekat as $item)
-                                <a href="{{ route('jatuh-tempo.index', ['selected' => $item->id]) }}" class="mini">
+                                <a href="{{ route('arsip-kuitansi.show', $item->id) }}" class="mini">
                                     <span class="ikon" aria-hidden="true">
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                     </span>
@@ -282,7 +282,7 @@
                     </div>
                     <div class="daftar">
                         @forelse ($pengingat->take(6) as $item)
-                            <a href="{{ route('jatuh-tempo.index', ['selected' => $item->id]) }}" class="baris">
+                            <a href="{{ route('arsip-kuitansi.show', $item->id) }}" class="baris">
                                 <span class="ikon" aria-hidden="true">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                                 </span>

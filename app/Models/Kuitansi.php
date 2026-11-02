@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class Kuitansi extends Model
@@ -89,6 +90,129 @@ class Kuitansi extends Model
         }
 
         return ['label' => 'Mendatang', 'code' => 'mendatang'];
+    }
+
+    /**
+     * Aturan status pembayaran. Dipakai pembayaran awal (saat arsip dibuat) dan pembayaran
+     * selanjutnya, sehingga keduanya memakai aturan yang sama dan owner tidak memilih status manual:
+     *  - sisa <= 0              -> lunas
+     *  - belum ada pembayaran   -> belum_lunas
+     *  - baru 1 pembayaran      -> dp
+     *  - 2 pembayaran atau lebih -> cicilan
+     */
+    public static function tentukanStatus(float $nominalTransaksi, float $totalTerbayar, int $jumlahPembayaran): string
+    {
+        if (round($nominalTransaksi - $totalTerbayar, 2) <= 0) {
+            return 'lunas';
+        }
+
+        if ($jumlahPembayaran <= 0) {
+            return 'belum_lunas';
+        }
+
+        return $jumlahPembayaran === 1 ? 'dp' : 'cicilan';
+    }
+
+    /**
+     * Nomor arsip berikutnya untuk sebuah tanggal kuitansi: KWT-yymmdd, lalu KWT-yymmdd-2, -3, ...
+     * Nomor arsip dibuat sistem, unik, dan tidak pernah diubah. Ini bukan nomor kuitansi fisik.
+     * Hanya menghitung (tidak mencadangkan); penyimpanan tetap dijaga oleh indeks unik di database.
+     */
+    public static function nomorArsipBerikut(Carbon $tanggalKuitansi): string
+    {
+        $dasar = 'KWT-'.$tanggalKuitansi->format('ymd');
+
+        $terpakai = static::query()
+            ->where(function ($q) use ($dasar) {
+                $q->where('nomor_kuitansi', $dasar)->orWhere('nomor_kuitansi', 'like', $dasar.'-%');
+            })
+            ->pluck('nomor_kuitansi');
+
+        if ($terpakai->isEmpty()) {
+            return $dasar;
+        }
+
+        $tertinggi = $terpakai
+            ->map(fn (string $nomor) => $nomor === $dasar ? 1 : (int) substr($nomor, strlen($dasar) + 1))
+            ->max();
+
+        return $dasar.'-'.($tertinggi + 1);
+    }
+
+    /**
+     * Arsip milik owner yang mirip dengan data yang akan disimpan, untuk peringatan duplikat.
+     * Mirip jika (nama pihak, tanggal kuitansi, dan nominal) sama, atau jika nomor kuitansi
+     * fisik yang diisi sama untuk nama pihak yang sama.
+     *
+     * @return Collection<int, static>
+     */
+    public static function yangMirip(int $userId, string $namaPihak, string $tanggalKuitansi, float $nominal, ?string $nomorFisik = null)
+    {
+        $nama = mb_strtolower(trim($namaPihak));
+        $fisik = $nomorFisik !== null ? mb_strtolower(trim($nomorFisik)) : '';
+
+        if ($nama === '') {
+            return collect();
+        }
+
+        return static::query()
+            ->where('user_id', $userId)
+            ->whereRaw('LOWER(TRIM(nama_pihak)) = ?', [$nama])
+            ->where(function ($q) use ($tanggalKuitansi, $nominal, $fisik) {
+                $q->where(function ($q2) use ($tanggalKuitansi, $nominal) {
+                    $q2->whereDate('tanggal_kuitansi', $tanggalKuitansi)
+                        ->where('nominal_transaksi', $nominal);
+                });
+
+                if ($fisik !== '') {
+                    $q->orWhereRaw('LOWER(TRIM(nomor_kuitansi_fisik)) = ?', [$fisik]);
+                }
+            })
+            ->orderByDesc('tanggal_kuitansi')
+            ->limit(3)
+            ->get();
+    }
+
+    /**
+     * Label status pembayaran. Dipakai Arsip, detail, dan Jatuh Tempo supaya penulisannya
+     * sama di semua halaman (mis. "DP", bukan "Dp").
+     *
+     * @var array<string, string>
+     */
+    public const LABEL_STATUS = [
+        'belum_lunas' => 'Belum lunas',
+        'dp' => 'DP',
+        'cicilan' => 'Cicilan',
+        'lunas' => 'Lunas',
+    ];
+
+    public static function labelStatus(?string $status): string
+    {
+        return self::LABEL_STATUS[$status] ?? ucfirst(str_replace('_', ' ', (string) $status));
+    }
+
+    /**
+     * Teks dan warna badge pengingat jatuh tempo. Satu sumber untuk Dashboard, Jatuh Tempo,
+     * dan Arsip: "Terlambat N hari", "Jatuh tempo hari ini", "H-N" (N = 1..7), atau "N hari lagi".
+     *
+     * @return array{0: string, 1: string} [teks, kelas warna: merah|kuning|netral]
+     */
+    public static function badgeTempo(mixed $tanggalJatuhTempo, Carbon $tanggalAcuan): array
+    {
+        if (! $tanggalJatuhTempo) {
+            return ['Tanpa tempo', 'netral'];
+        }
+
+        $acuan = $tanggalAcuan->copy()->startOfDay();
+        $tempo = Carbon::parse($tanggalJatuhTempo)->startOfDay();
+        $selisih = (int) abs($acuan->diffInDays($tempo));
+
+        return match (true) {
+            $tempo->lt($acuan) => ["Terlambat {$selisih} hari", 'merah'],
+            $selisih === 0 => ['Jatuh tempo hari ini', 'kuning'],
+            $selisih <= self::HARI_PENGINGAT => ["H-{$selisih}", 'kuning'],
+            default => ["{$selisih} hari lagi", 'netral'],
+        };
     }
 
     /**

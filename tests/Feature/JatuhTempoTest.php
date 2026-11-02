@@ -7,8 +7,13 @@ use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
+/**
+ * Fitur 7: pengingat jatuh tempo (H-7, hari ini, terlambat) untuk tagihan aktif yang masih bersisa.
+ */
 class JatuhTempoTest extends TestCase
 {
     use RefreshDatabase;
@@ -25,214 +30,230 @@ class JatuhTempoTest extends TestCase
         parent::tearDown();
     }
 
+    private function buatKuitansi(User $owner, array $override = []): Kuitansi
+    {
+        return Kuitansi::create(array_merge([
+            'user_id' => $owner->id,
+            'nomor_kuitansi' => 'KWT-J-'.uniqid(),
+            'nama_pihak' => 'Pihak Uji',
+            'role_pihak' => 'Pelanggan',
+            'jenis' => 'piutang',
+            'nominal_transaksi' => 1000000,
+            'status_pembayaran' => 'belum_lunas',
+            'tanggal_kuitansi' => '2026-09-01',
+            'tanggal_jatuh_tempo' => '2026-12-31',
+        ], $override));
+    }
+
     public function test_unauthenticated_user_cannot_access_jatuh_tempo(): void
     {
-        $response = $this->get('/jatuh-tempo');
-
-        $response->assertRedirect(route('login'));
+        $this->get('/jatuh-tempo')->assertRedirect(route('login'));
     }
 
-    public function test_authenticated_user_can_view_jatuh_tempo_page(): void
+    public function test_page_shows_title_summary_cards_tabs_and_table_columns(): void
     {
-        $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
+        $response = $this->actingAs(User::factory()->create())->get('/jatuh-tempo');
 
-        $response = $this->actingAs($user)->get('/jatuh-tempo');
-
-        $response->assertStatus(200);
-        $response->assertSee('Utang & Piutang — Jatuh Tempo', false);
+        $response->assertOk();
+        $response->assertSee('Jatuh Tempo');
         $response->assertSee('Pantau tagihan yang perlu perhatian, rincian transaksi, dan bukti kuitansinya.');
-        $response->assertSee('Kuitansi perlu perhatian');
-        $response->assertSee('• Utang & Piutang', false);
-        $response->assertSee('Dashboard');
-        $response->assertSee('Data tersinkron');
-    }
-
-    public function test_jatuh_tempo_renders_exact_mockup_metric_cards(): void
-    {
-        $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
-
-        $response = $this->actingAs($user)->get('/jatuh-tempo');
-
-        $response->assertStatus(200);
-        // Sisa perlu diselesaikan
-        $response->assertSee('Rp20.850.000');
-        // Piutang pelanggan
-        $response->assertSee('Rp12.450.000');
-        // Utang ke supplier
-        $response->assertSee('Rp8.400.000');
-        // 4 kuitansi perlu perhatian (3 terlambat, 1 besok)
-        $response->assertSee('4 kuitansi');
-        $response->assertSee('3 terlambat • 1 jatuh tempo besok');
-    }
-
-    public function test_filter_by_tab_terlambat_and_h_1(): void
-    {
-        $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
-
-        // Test filter Terlambat
-        $responseTerlambat = $this->actingAs($user)->get('/jatuh-tempo?tab=terlambat');
-        $responseTerlambat->assertStatus(200);
-        $responseTerlambat->assertSee('Toko Makmur Jaya');
-        $responseTerlambat->assertSee('PT Sumber Pangan');
-        $responseTerlambat->assertSee('Warung Bu Sari');
-        $responseTerlambat->assertDontSee('Kantin Melati');
-
-        // Test filter H-1
-        $responseH1 = $this->actingAs($user)->get('/jatuh-tempo?tab=h-1');
-        $responseH1->assertStatus(200);
-        $responseH1->assertSee('Kantin Melati');
-        $responseH1->assertDontSee('Toko Makmur Jaya');
-    }
-
-    public function test_filter_by_search_query(): void
-    {
-        $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
-
-        $response = $this->actingAs($user)->get('/jatuh-tempo?q=Makmur');
-        $response->assertStatus(200);
-        $response->assertSee('Toko Makmur Jaya');
-        $response->assertDontSee('Warung Bu Sari');
-    }
-
-    public function test_filter_by_jenis(): void
-    {
-        $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
-
-        // Hanya utang
-        $responseUtang = $this->actingAs($user)->get('/jatuh-tempo?jenis=utang');
-        $responseUtang->assertStatus(200);
-        $responseUtang->assertSee('PT Sumber Pangan');
-        $responseUtang->assertDontSee('Toko Makmur Jaya');
-
-        // Hanya piutang
-        $responsePiutang = $this->actingAs($user)->get('/jatuh-tempo?jenis=piutang');
-        $responsePiutang->assertStatus(200);
-        $responsePiutang->assertSee('Toko Makmur Jaya');
-        $responsePiutang->assertDontSee('PT Sumber Pangan');
-    }
-
-    public function test_selected_kuitansi_displays_detail_and_payment_records(): void
-    {
-        $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
-
-        // Ketika belum ada yang dipilih, section detail tidak tampil sama sekali
-        $responseUnselected = $this->actingAs($user)->get('/jatuh-tempo');
-        $responseUnselected->assertStatus(200);
-        $responseUnselected->assertDontSee('Detail transaksi');
-        $responseUnselected->assertDontSee('DITAMPILKAN');
-
-        // Ketika user memilih tempat/kuitansi (misal Warung Bu Sari)
-        $warungBuSari = Kuitansi::where('nama_pihak', 'Warung Bu Sari')->first();
-        $responseSelected = $this->actingAs($user)->get("/jatuh-tempo?selected={$warungBuSari->id}");
-        $responseSelected->assertStatus(200);
-        $responseSelected->assertSee('Detail transaksi');
-        $responseSelected->assertSee('DITAMPILKAN');
-        $responseSelected->assertSee('KWT-240918');
-        $responseSelected->assertSee('Warung Bu Sari');
-        $responseSelected->assertSee('Bukti kuitansi');
-        $responseSelected->assertSee('kuitansi-warung-bu-sari.svg');
-        $responseSelected->assertSee('Riwayat pembayaran');
-        $responseSelected->assertSee('Transfer bank');
-        $responseSelected->assertSee('Tunai - pembayaran awal');
-        $responseSelected->assertSee('Rp2.000.000');
-        $responseSelected->assertSee('Rp3.000.000');
-        $responseSelected->assertSee('Rp5.000.000');
-    }
-
-    public function test_dashboard_displays_jatuh_tempo_summary_card_and_link(): void
-    {
-        $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
-
-        $response = $this->actingAs($user)->get('/dashboard');
-
-        $response->assertStatus(200);
-        $response->assertSee('Peringatan jatuh tempo');
-        $response->assertSee('Lihat detail');
-        $response->assertSee(route('jatuh-tempo.index'));
-        $response->assertSee('4 tagihan perlu perhatian mulai H-7 (3 terlambat)');
+        $response->assertSee('Sisa perlu diselesaikan');
+        $response->assertSee('Piutang pelanggan');
+        $response->assertSee('Utang ke supplier');
         $response->assertSee('Perlu perhatian');
-        $response->assertSee('Toko Makmur Jaya');
+        $response->assertSee('Pengingat aktif mulai H-7 sebelum jatuh tempo');
+        $response->assertSee('Tidak ada tagihan yang perlu perhatian');
     }
 
-    public function test_jatuh_tempo_page_uses_the_same_h7_window_as_dashboard(): void
+    public function test_summary_and_rows_come_from_the_same_active_reminder_data(): void
     {
-        Carbon::setTestNow(Carbon::parse('2026-09-29 09:00:00'));
-        $user = User::factory()->create();
-        foreach ([['Tempo H-5', '2026-10-04'], ['Tempo H-7', '2026-10-06'], ['Tempo H-9', '2026-10-08']] as [$nama, $tempo]) {
-            Kuitansi::create([
-                'user_id' => $user->id, 'nomor_kuitansi' => 'KWT-'.$nama, 'nama_pihak' => $nama, 'jenis' => 'piutang',
-                'nominal_transaksi' => 100000, 'status_pembayaran' => 'belum_lunas',
-                'tanggal_kuitansi' => '2026-09-01', 'tanggal_jatuh_tempo' => $tempo,
-            ]);
+        $this->seed(DatabaseSeeder::class);
+
+        $response = $this->actingAs(User::query()->first())->get('/jatuh-tempo');
+
+        $response->assertOk();
+        $response->assertSee('Rp20.850.000');                 // sisa perlu diselesaikan
+        $response->assertSee('Total sisa dari 4 kuitansi');
+        $response->assertSee('Rp12.450.000');                 // piutang pelanggan
+        $response->assertSee('Rp8.400.000');                  // utang ke supplier
+        $response->assertSee('4 kuitansi');
+        $response->assertSee('3 terlambat · 0 hari ini · 1 H-7');
+        foreach (['Toko Makmur Jaya', 'PT Sumber Pangan', 'Warung Bu Sari', 'Kantin Melati'] as $nama) {
+            $response->assertSee($nama);
         }
-
-        $jatuhTempo = $this->actingAs($user)->get('/jatuh-tempo?tab=h-4-7');
-
-        $jatuhTempo->assertOk();
-        $jatuhTempo->assertSee('Pengingat aktif mulai H-7');
-        $jatuhTempo->assertSee('Tempo H-5');
-        $jatuhTempo->assertSee('Tempo H-7');
-        $jatuhTempo->assertDontSee('Tempo H-9');
-
-        // Dashboard menghitung jumlah yang sama (2 tagihan) untuk data yang sama.
-        $this->actingAs($user)->get('/dashboard')->assertSee('2 tagihan perlu perhatian mulai H-7');
-    }
-
-    public function test_jatuh_tempo_calculates_reminders_in_real_time(): void
-    {
-        Carbon::setTestNow(Carbon::parse('2026-10-18 10:00:00'));
-        $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
-
-        $response = $this->actingAs($user)->get('/jatuh-tempo');
-
-        $response->assertStatus(200);
-        $response->assertSee('Data per 18 Okt 2026, 10.00');
-        $response->assertSee('H-1 • Besok');
         $response->assertSee('Terlambat 7 hari');
+        $response->assertSee('H-1');
+        // Kuitansi lunas tidak ikut pengingat.
+        $response->assertDontSee('Toko Berkah Jaya');
     }
 
-    public function test_selected_kuitansi_without_receipt_displays_empty_placeholder(): void
+    public function test_tabs_filter_by_category(): void
     {
         $this->seed(DatabaseSeeder::class);
         $user = User::query()->first();
 
-        // Kantin Melati tidak memiliki file bukti kuitansi
-        $kantinMelati = Kuitansi::where('nama_pihak', 'Kantin Melati')->first();
-        $this->assertNull($kantinMelati->bukti_kuitansi);
+        $terlambat = $this->actingAs($user)->get('/jatuh-tempo?tab=terlambat');
+        $terlambat->assertSee('Toko Makmur Jaya');
+        $terlambat->assertSee('PT Sumber Pangan');
+        $terlambat->assertSee('Warung Bu Sari');
+        $terlambat->assertDontSee('Kantin Melati');
 
-        $response = $this->actingAs($user)->get("/jatuh-tempo?selected={$kantinMelati->id}");
+        $mendekati = $this->actingAs($user)->get('/jatuh-tempo?tab=h-7');
+        $mendekati->assertSee('Kantin Melati');
+        $mendekati->assertDontSee('Toko Makmur Jaya');
 
-        $response->assertStatus(200);
-        $response->assertSee('Detail transaksi');
-        $response->assertSee('0 lampiran');
-        $response->assertSee('Belum ada bukti kuitansi');
-        $response->assertSee('Tidak ada lampiran berkas');
+        $hariIni = $this->actingAs($user)->get('/jatuh-tempo?tab=hari-ini');
+        $hariIni->assertSee('Tidak ada tagihan pada kategori ini');
+        $hariIni->assertDontSee('Kantin Melati');
     }
 
-    public function test_selected_kuitansi_with_custom_uploaded_receipt_displays_dynamic_image_and_name(): void
+    public function test_example_from_system_analyst_20_november(): void
+    {
+        $owner = User::factory()->create();
+        $this->buatKuitansi($owner, ['nama_pihak' => 'Tempo 20 Nov', 'tanggal_jatuh_tempo' => '2026-11-20']);
+
+        // 12 November: belum diingatkan (H-8).
+        Carbon::setTestNow(Carbon::parse('2026-11-12 08:00:00'));
+        $this->actingAs($owner)->get('/jatuh-tempo')->assertDontSee('Tempo 20 Nov');
+
+        // 13 November: mulai diingatkan (H-7).
+        Carbon::setTestNow(Carbon::parse('2026-11-13 08:00:00'));
+        $r = $this->actingAs($owner)->get('/jatuh-tempo');
+        $r->assertSee('Tempo 20 Nov');
+        $r->assertSee('H-7');
+
+        // 20 November: jatuh tempo hari ini.
+        Carbon::setTestNow(Carbon::parse('2026-11-20 08:00:00'));
+        $r = $this->actingAs($owner)->get('/jatuh-tempo');
+        $r->assertSee('Jatuh tempo hari ini');
+        $r->assertSee('1 hari ini');
+
+        // 21 November: terlambat satu hari.
+        Carbon::setTestNow(Carbon::parse('2026-11-21 08:00:00'));
+        $this->actingAs($owner)->get('/jatuh-tempo')->assertSee('Terlambat 1 hari');
+    }
+
+    public function test_only_active_invoices_with_remaining_balance_are_reminded(): void
+    {
+        $owner = User::factory()->create();
+        $this->buatKuitansi($owner, ['nama_pihak' => 'Masih Bersisa', 'tanggal_jatuh_tempo' => '2026-10-01']);
+
+        $sudahLunas = $this->buatKuitansi($owner, [
+            'nama_pihak' => 'Sudah Lunas Dibayar', 'tanggal_jatuh_tempo' => '2026-10-01', 'status_pembayaran' => 'dp',
+        ]);
+        $sudahLunas->pembayaran()->create([
+            'nominal' => 1000000, 'tanggal_pembayaran' => '2026-09-20', 'metode_pembayaran' => 'Tunai', 'dicatat_oleh' => 'Andi',
+        ]);
+
+        $this->buatKuitansi($owner, [
+            'nama_pihak' => 'Status Lunas', 'tanggal_jatuh_tempo' => '2026-10-01', 'status_pembayaran' => 'lunas',
+        ])->pembayaran()->create([
+            'nominal' => 1000000, 'tanggal_pembayaran' => '2026-09-20', 'metode_pembayaran' => 'Tunai', 'dicatat_oleh' => 'Andi',
+        ]);
+
+        $response = $this->actingAs($owner)->get('/jatuh-tempo');
+
+        $response->assertSee('Masih Bersisa');
+        $response->assertDontSee('Sudah Lunas Dibayar');
+        $response->assertDontSee('Status Lunas');
+        $response->assertSee('Total sisa dari 1 kuitansi');
+    }
+
+    public function test_other_owner_data_is_never_shown(): void
+    {
+        $owner = User::factory()->create();
+        $lain = User::factory()->create();
+        $this->buatKuitansi($lain, ['nama_pihak' => 'Milik Orang Lain', 'tanggal_jatuh_tempo' => '2026-09-20']);
+
+        $this->actingAs($owner)->get('/jatuh-tempo')->assertDontSee('Milik Orang Lain');
+    }
+
+    public function test_paying_in_full_removes_invoice_from_reminders(): void
+    {
+        $owner = User::factory()->create();
+        $kuitansi = $this->buatKuitansi($owner, ['nama_pihak' => 'Akan Lunas', 'tanggal_jatuh_tempo' => '2026-10-02']);
+
+        $this->actingAs($owner)->get('/jatuh-tempo')->assertSee('Akan Lunas');
+
+        $this->actingAs($owner)->post(route('pembayaran.store', $kuitansi), [
+            'nominal' => 1000000,
+            'tanggal_pembayaran' => '2026-09-29',
+            'metode_pembayaran' => 'Tunai',
+        ])->assertRedirect();
+
+        // Baris tagihan hilang dari daftar (pesan sukses sekali tampil boleh menyebut namanya).
+        $this->actingAs($owner)->get('/jatuh-tempo')->assertDontSee('data-nama="Akan Lunas"', false);
+        $this->actingAs($owner)->get('/jatuh-tempo')->assertSee('Tidak ada tagihan yang perlu perhatian');
+        $this->actingAs($owner)->get('/dashboard')->assertDontSee('perlu perhatian mulai H-7');
+    }
+
+    public function test_partial_payment_keeps_invoice_with_reduced_balance_and_late_days(): void
+    {
+        $owner = User::factory()->create();
+        $kuitansi = $this->buatKuitansi($owner, ['nama_pihak' => 'Dicicil', 'tanggal_jatuh_tempo' => '2026-09-26']);
+
+        $this->actingAs($owner)->post(route('pembayaran.store', $kuitansi), [
+            'nominal' => 400000,
+            'tanggal_pembayaran' => '2026-09-29',
+            'metode_pembayaran' => 'Transfer bank',
+        ])->assertRedirect();
+
+        $response = $this->actingAs($owner)->get('/jatuh-tempo');
+
+        $response->assertSee('Dicicil');
+        $response->assertSee('Rp600.000');       // sisa berkurang
+        $response->assertSee('Rp400.000');       // terbayar
+        $response->assertSee('Terlambat 3 hari'); // tetap tampil dengan jumlah hari keterlambatan
+    }
+
+    public function test_row_has_pay_button_with_modal_and_links_to_detail(): void
+    {
+        $owner = User::factory()->create();
+        $kuitansi = $this->buatKuitansi($owner, ['nama_pihak' => 'Punya Tombol', 'tanggal_jatuh_tempo' => '2026-10-02']);
+
+        $response = $this->actingAs($owner)->get('/jatuh-tempo');
+
+        $response->assertSee('data-bayar', false);
+        $response->assertSee('data-action="'.route('pembayaran.store', $kuitansi).'"', false);
+        $response->assertSee('Tambah pembayaran');
+        $response->assertSee('Simpan pembayaran');
+        $response->assertSee('href="'.route('arsip-kuitansi.show', $kuitansi).'"', false);
+    }
+
+    public function test_failed_payment_reopens_the_modal_with_the_error(): void
+    {
+        $owner = User::factory()->create();
+        $kuitansi = $this->buatKuitansi($owner, ['nama_pihak' => 'Salah Isi', 'tanggal_jatuh_tempo' => '2026-10-02']);
+
+        $this->followingRedirects()->actingAs($owner)->from('/jatuh-tempo')->post(route('pembayaran.store', $kuitansi), [
+            '_kuitansi' => $kuitansi->id,
+            'nominal' => 9999999,
+            'tanggal_pembayaran' => '2026-09-29',
+            'metode_pembayaran' => 'Tunai',
+        ])->assertSee('Nominal melebihi sisa tagihan')->assertSee('var bukaId = '.$kuitansi->id, false);
+    }
+
+    public function test_reminders_are_not_sent_by_whatsapp_or_email(): void
+    {
+        Mail::fake();
+        Notification::fake();
+
+        $this->seed(DatabaseSeeder::class);
+        $owner = User::query()->first();
+        $this->actingAs($owner)->get('/dashboard')->assertOk();
+        $this->actingAs($owner)->get('/jatuh-tempo')->assertOk();
+
+        Mail::assertNothingSent();
+        Mail::assertNothingQueued();
+        Notification::assertNothingSent();
+    }
+
+    public function test_dashboard_and_jatuh_tempo_count_the_same_reminders(): void
     {
         $this->seed(DatabaseSeeder::class);
-        $user = User::query()->first();
+        $owner = User::query()->first();
 
-        $tokoMakmur = Kuitansi::where('nama_pihak', 'Toko Makmur Jaya')->first();
-        $tokoMakmur->update(['bukti_kuitansi' => 'kuitansi/struk-pembelian-makmur-999.png']);
-
-        $response = $this->actingAs($user)->get("/jatuh-tempo?selected={$tokoMakmur->id}");
-
-        $response->assertStatus(200);
-        $response->assertSee('Detail transaksi');
-        $response->assertSee('1 lampiran');
-        $response->assertSee('struk-pembelian-makmur-999.png');
-        // URL foto mengarah ke route terlindungi, bukan ke folder publik.
-        $response->assertSee("/arsip-kuitansi/{$tokoMakmur->id}/bukti");
-        $response->assertDontSee('storage/kuitansi/');
+        $this->actingAs($owner)->get('/dashboard')->assertSee('4 tagihan perlu perhatian mulai H-7 (3 terlambat)');
+        $this->actingAs($owner)->get('/jatuh-tempo')->assertSee('3 terlambat · 0 hari ini · 1 H-7');
     }
 }

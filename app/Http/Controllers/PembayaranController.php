@@ -89,22 +89,10 @@ class PembayaranController extends Controller
     }
 
     /**
-     * Aturan status:
-     *  - total terbayar >= nominal transaksi -> lunas
-     *  - belum ada pembayaran                -> belum_lunas
-     *  - baru 1 pembayaran                   -> dp
-     *  - 2 pembayaran atau lebih             -> cicilan
+     * Aturan status ada di Kuitansi::tentukanStatus (dipakai juga oleh pembayaran awal).
      */
     public static function tentukanStatus(float $nominalTransaksi, float $totalTerbayar, int $jumlahPembayaran): string
     {
-        if (round($nominalTransaksi - $totalTerbayar, 2) <= 0) {
-            return 'lunas';
-        }
-
-        if ($jumlahPembayaran <= 0) {
-            return 'belum_lunas';
-        }
-
-        return $jumlahPembayaran === 1 ? 'dp' : 'cicilan';
+        return Kuitansi::tentukanStatus($nominalTransaksi, $totalTerbayar, $jumlahPembayaran);
     }
 }

@@ -124,25 +124,13 @@ class DashboardController extends Controller
     }
 
     /**
-     * Teks singkat untuk badge tempo dan warna yang dipakai.
+     * Teks singkat untuk badge tempo dan warna yang dipakai (aturan ada di Kuitansi::badgeTempo).
      *
      * @return array{0: string, 1: string}
      */
     private function badgeTempo(object $item, Carbon $tanggalAcuan): array
     {
-        if (! $item->tanggal_jatuh_tempo) {
-            return ['Tanpa tempo', 'netral'];
-        }
-
-        $tempo = Carbon::parse($item->tanggal_jatuh_tempo)->startOfDay();
-        $selisih = (int) abs($tanggalAcuan->diffInDays($tempo));
-
-        return match (true) {
-            $tempo->lt($tanggalAcuan) => ["Terlambat {$selisih} hari", 'merah'],
-            $selisih === 0 => ['Hari ini', 'kuning'],
-            $selisih <= Kuitansi::HARI_PENGINGAT => ["H-{$selisih}", 'kuning'],
-            default => ["{$selisih} hari lagi", 'netral'],
-        };
+        return Kuitansi::badgeTempo($item->tanggal_jatuh_tempo, $tanggalAcuan);
     }
 
     /**

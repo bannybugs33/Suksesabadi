@@ -12,11 +12,17 @@ Sistem pencatatan keuangan, monitoring arus kas, serta manajemen utang dan piuta
 - Daftar transaksi terkini dengan kalkulasi saldo dan status pembayaran berjalan.
 
 ### 2. Manajemen Utang & Piutang (Jatuh Tempo)
-- **Pengingat Jatuh Tempo Real-Time**: Status tagihan dihitung otomatis berdasarkan tanggal acuan sistem, mencakup kategori *Terlambat*, *Hari Ini*, *H-1 (Besok)*, *H-2*, dan *H-3*.
+- **Pengingat Jatuh Tempo Real-Time**: Tagihan aktif yang masih bersisa diingatkan mulai **H-7** sebelum jatuh tempo, dengan kategori *Mendekati jatuh tempo (H-7 s/d H-1)*, *Jatuh tempo hari ini*, dan *Terlambat (N hari)*. Pengingat hanya tampil di Dashboard dan halaman Jatuh Tempo (tanpa WhatsApp atau email) dan hilang otomatis setelah tagihan lunas.
 - **Penyaringan Data Lengkap**: Filter transaksi berdasarkan rentang waktu tempo, jenis kewajiban (`Utang` / `Piutang`), status pembayaran (`Belum Lunas`, `DP`, `Cicilan`), dan pencarian teks nama pihak atau nomor kuitansi.
 - **Panel Rincian Transaksi Interaktif**: Tampilan detail transaksi kuitansi dapat dibuka langsung tanpa perlu memuat ulang seluruh halaman (interaksi berbasis komponen client-side).
+- **Mengarsipkan Kuitansi**:
+  - Tepat **satu foto** per arsip (JPG atau PNG, maksimal 10 MB); PDF dan beberapa lampiran ditolak.
+  - **Nomor arsip** dibuat otomatis oleh sistem (unik, tidak diubah); **nomor kuitansi fisik** adalah isian opsional yang terpisah.
+  - Owner mengisi **nominal pembayaran**, bukan memilih status. Status dihitung otomatis dengan aturan yang sama seperti pembayaran selanjutnya (belum lunas, DP, cicilan, lunas).
+  - Tanggal jatuh tempo **wajib selama masih ada sisa**; transaksi yang langsung lunas boleh tanpa jatuh tempo.
+  - Peringatan sebelum menyimpan bila ada arsip yang mirip (nama, tanggal, dan nominal sama, atau nomor kuitansi fisik sama).
 - **Pengelolaan Bukti Kuitansi Dinamis**:
-  - Mendukung resolusi berkas bukti dari Laravel Storage (`public`), folder aset publik (`images/`), maupun tautan eksternal.
+  - Foto bukti disimpan di penyimpanan privat dan hanya dapat dibuka oleh owner yang sudah login.
   - Menampilkan nama berkas asli, ekstensi, dan kalkulasi ukuran berkas aktual dari penyimpanan disk.
   - Tampilan penampung (*empty-state*) informatif dan bersih apabila transaksi belum memiliki lampiran berkas fisik.
   - Tombol pratinjau (*lihat bukti*) dan unduhan (*download*) langsung tertaut ke sumber berkas.
@@ -128,15 +134,16 @@ Data awal (seeder) menyediakan beberapa akun pengguna bawaan:
 
 1. **`users`**: Menyimpan identitas kasir dan pengelola toko untuk autentikasi.
 2. **`kuitansi`**: Menyimpan data induk transaksi tagihan:
-   - `nomor_kuitansi`: Nomor kuitansi unik (misal: `KWT-240918`).
+   - `nomor_kuitansi`: **Nomor arsip** yang dibuat sistem, unik, dan tidak diubah (misal: `KWT-240918`, lalu `KWT-240918-2` untuk tanggal yang sama).
+   - `nomor_kuitansi_fisik`: Nomor pada dokumen asli, opsional dan tidak harus unik.
    - `nama_pihak`: Nama pihak rekanan (pelanggan atau supplier).
    - `role_pihak`: Keterangan peran pihak (misal: *Pelanggan berutang kepada toko* atau *Supplier harus dibayar toko*).
    - `jenis`: Jenis transaksi (`utang` atau `piutang`).
    - `nominal_transaksi`: Total nilai transaksi awal.
-   - `status_pembayaran`: Status pembayaran (`belum_lunas`, `dp`, `cicilan`, `lunas`).
+   - `status_pembayaran`: Status pembayaran (`belum_lunas`, `dp`, `cicilan`, `lunas`), dihitung otomatis dari pembayaran.
    - `tanggal_kuitansi`: Tanggal transaksi dibuat.
-   - `tanggal_jatuh_tempo`: Batas waktu penyelesaian tagihan.
-   - `bukti_kuitansi`: Lokasi berkas fisik bukti kuitansi (bisa berupa path storage, public asset, atau URL).
+   - `tanggal_jatuh_tempo`: Batas waktu penyelesaian tagihan (wajib selama masih ada sisa).
+   - `bukti_kuitansi`: Lokasi satu foto bukti kuitansi di penyimpanan privat.
    - `keterangan`: Catatan deskripsi transaksi.
 3. **`pembayaran`**: Menyimpan riwayat pembayaran parsial/lunas yang terhubung ke kuitansi:
    - `kuitansi_id`: Relasi ke tabel `kuitansi`.

@@ -2,7 +2,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 {{-- Font dimuat tanpa memblokir render: jika Google Fonts lambat/tidak terjangkau, halaman tetap tampil dengan font sistem. --}}
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" media="print" onload="this.media='all'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap"></noscript>
+<noscript>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+</noscript>
 <style>
     :root {
         --ink: #2a2a5c;
@@ -46,8 +48,21 @@
         justify-content: center;
     }
 
-    .topnav-name { display: block; font-size: 15px; font-weight: 800; line-height: 1.1; }
-    .topnav-tag { display: block; margin-top: 3px; font-size: 8px; font-weight: 700; letter-spacing: 1.4px; color: var(--muted); }
+    .topnav-name {
+        display: block;
+        font-size: 15px;
+        font-weight: 800;
+        line-height: 1.1;
+    }
+
+    .topnav-tag {
+        display: block;
+        margin-top: 3px;
+        font-size: 8px;
+        font-weight: 700;
+        letter-spacing: 1.4px;
+        color: var(--muted);
+    }
 
     .topnav-links {
         display: flex;
@@ -60,9 +75,14 @@
         scrollbar-width: none;
     }
 
-    .topnav-links::-webkit-scrollbar { display: none; }
+    .topnav-links::-webkit-scrollbar {
+        display: none;
+    }
 
     .topnav-links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
         padding: 8px 16px;
         border-radius: 999px;
         font-size: 13px;
@@ -72,7 +92,13 @@
         white-space: nowrap;
     }
 
-    .topnav-links a:hover { color: var(--ink); }
+    .topnav-links a:hover {
+        color: var(--ink);
+    }
+
+    .topnav-icon {
+        flex-shrink: 0;
+    }
 
     .topnav-links a.is-active {
         background: var(--ink);
@@ -80,7 +106,12 @@
         font-weight: 700;
     }
 
-    .topnav-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .topnav-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 0;
+    }
 
     .bell {
         position: relative;
@@ -114,9 +145,18 @@
         border: 2px solid var(--stage);
     }
 
-    .akun { position: relative; }
-    .akun summary { list-style: none; cursor: pointer; }
-    .akun summary::-webkit-details-marker { display: none; }
+    .akun {
+        position: relative;
+    }
+
+    .akun summary {
+        list-style: none;
+        cursor: pointer;
+    }
+
+    .akun summary::-webkit-details-marker {
+        display: none;
+    }
 
     .avatar {
         width: 40px;
@@ -143,8 +183,19 @@
         box-shadow: 0 24px 48px -16px rgba(42, 42, 92, 0.35);
     }
 
-    .akun-menu strong { display: block; font-size: 13.5px; font-weight: 800; color: var(--ink); }
-    .akun-menu span { display: block; margin: 2px 0 12px; font-size: 12px; color: var(--muted); }
+    .akun-menu strong {
+        display: block;
+        font-size: 13.5px;
+        font-weight: 800;
+        color: var(--ink);
+    }
+
+    .akun-menu span {
+        display: block;
+        margin: 2px 0 12px;
+        font-size: 12px;
+        color: var(--muted);
+    }
 
     .akun-menu button {
         width: 100%;
@@ -163,13 +214,27 @@
         gap: 8px;
     }
 
-    .akun-menu button:hover { background: var(--ink-strong); }
+    .akun-menu button:hover {
+        background: var(--ink-strong);
+    }
 
-    :focus-visible { outline: 3px solid rgba(42, 42, 92, 0.4); outline-offset: 2px; }
+    :focus-visible {
+        outline: 3px solid rgba(42, 42, 92, 0.4);
+        outline-offset: 2px;
+    }
 
     @media (max-width: 860px) {
-        .topnav { flex-wrap: wrap; }
-        .topnav-links { order: 3; width: 100%; }
-        .topnav-actions { margin-left: auto; }
+        .topnav {
+            flex-wrap: wrap;
+        }
+
+        .topnav-links {
+            order: 3;
+            width: 100%;
+        }
+
+        .topnav-actions {
+            margin-left: auto;
+        }
     }
 </style>

@@ -39,7 +39,7 @@ class ArsipKuitansiTest extends TestCase
     {
         return Kuitansi::create(array_merge([
             'user_id' => $owner->id,
-            'nomor_kuitansi' => 'KWT-A-' . uniqid(),
+            'nomor_kuitansi' => 'KWT-A-'.uniqid(),
             'nama_pihak' => 'Pihak Uji',
             'role_pihak' => 'Pelanggan',
             'jenis' => 'piutang',
@@ -94,7 +94,7 @@ class ArsipKuitansiTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->actingAs(User::query()->first())->get('/arsip-kuitansi?q=' . urlencode('  Kantin  '))
+        $this->actingAs(User::query()->first())->get('/arsip-kuitansi?q='.urlencode('  Kantin  '))
             ->assertSee('Kantin Melati')
             ->assertDontSee('Toko Makmur Jaya');
     }
@@ -147,7 +147,7 @@ class ArsipKuitansiTest extends TestCase
             $this->buatKuitansi($owner, [
                 'nama_pihak' => "Pelanggan {$i}",
                 'nomor_kuitansi' => "KWT-P-{$i}",
-                'tanggal_kuitansi' => '2026-09-0' . $i,
+                'tanggal_kuitansi' => '2026-09-0'.$i,
             ]);
         }
 
@@ -214,7 +214,7 @@ class ArsipKuitansiTest extends TestCase
         $daftar->assertSee('Rp8.750.000');
         $daftar->assertSee('>DP<', false);          // label status sama dengan desain dan detail
         $daftar->assertSee('H-4');                    // penanda tempo dari aturan bersama
-        $daftar->assertSee('href="' . route('arsip-kuitansi.show', $kuitansi) . '"', false);
+        $daftar->assertSee('href="'.route('arsip-kuitansi.show', $kuitansi).'"', false);
 
         $detail = $this->actingAs($owner)->get(route('arsip-kuitansi.show', $kuitansi));
         $detail->assertOk();
@@ -256,10 +256,10 @@ class ArsipKuitansiTest extends TestCase
     {
         $response = $this->actingAs(User::factory()->create())->get('/arsip-kuitansi');
 
-        $response->assertSee('href="' . route('dashboard') . '"', false);
-        $response->assertSee('href="' . route('kuitansi.create') . '"', false);
-        $response->assertSee('href="' . route('jatuh-tempo.index') . '"', false);
-        $response->assertSee('href="' . route('rekapitulasi.index') . '"', false);
+        $response->assertSee('href="'.route('dashboard').'"', false);
+        $response->assertSee('href="'.route('kuitansi.create').'"', false);
+        $response->assertSee('href="'.route('jatuh-tempo.index').'"', false);
+        $response->assertSee('href="'.route('rekapitulasi.index').'"', false);
         // Tab aktif kini berisi ikon SVG, lalu teks label di dalam <span>.
         $this->assertMatchesRegularExpression('/aria-current="page"\s*>\s*<svg.*?<\/svg>\s*<span>Arsip<\/span>/s', $response->getContent());
     }

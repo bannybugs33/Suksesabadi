@@ -70,13 +70,15 @@ class JatuhTempoController extends Controller
     }
 
     /**
-     * Tagihan aktif (sisa > 0) yang masuk pengingat, urut dari yang paling mendesak.
+     * Tagihan aktif (sisa > 0, belum dibatalkan) yang masuk pengingat, urut dari yang paling mendesak.
+     * Hanya pembayaran berstatus aktif yang dihitung.
      *
      * @return Collection<int, object>
      */
     private function ambilPengingat(int $userId, Carbon $tanggalAcuan): Collection
     {
         $pembayaran = DB::table('pembayaran')
+            ->where('status', 'aktif')
             ->select('kuitansi_id')
             ->selectRaw('SUM(nominal) AS total_terbayar')
             ->groupBy('kuitansi_id');
@@ -86,6 +88,7 @@ class JatuhTempoController extends Controller
                 $join->on('k.id', '=', 'p.kuitansi_id');
             })
             ->where('k.user_id', $userId)
+            ->whereNull('k.dibatalkan_pada')
             // Aktif = masih bersisa (dihitung dari pembayaran), sama seperti Dashboard dan Arsip.
             ->whereRaw('ROUND(k.nominal_transaksi - COALESCE(p.total_terbayar, 0), 2) > 0')
             ->select('k.*')

@@ -43,6 +43,12 @@ class PembayaranController extends Controller
             $sisa = round($nominalTransaksi - $terbayar, 2);
             $nominal = round((float) $data['nominal'], 2);
 
+            if ($kuitansi->dibatalkan_pada !== null) {
+                throw ValidationException::withMessages([
+                    'nominal' => 'Transaksi ini sudah dibatalkan, pembayaran tidak bisa ditambah.',
+                ]);
+            }
+
             if ($kuitansi->status_pembayaran === 'lunas' || $sisa <= 0) {
                 throw ValidationException::withMessages([
                     'nominal' => 'Kuitansi ini sudah lunas.',
@@ -75,6 +81,15 @@ class PembayaranController extends Controller
         });
 
         $label = $kuitansi->jenis === 'piutang' ? 'Piutang' : 'Utang';
+
+        // Pembayaran dari halaman detail arsip kembali ke halaman detail yang sama.
+        if ($request->input('redirect_to') === 'arsip') {
+            return redirect()
+                ->route('arsip-kuitansi.show', $kuitansi)
+                ->with('status', $statusBaru === 'lunas'
+                    ? "Pembayaran dicatat. {$label} {$kuitansi->nama_pihak} sekarang LUNAS."
+                    : 'Pembayaran berhasil dicatat. Status sekarang: '.Kuitansi::labelStatus($statusBaru).'.');
+        }
 
         if ($statusBaru === 'lunas') {
             // Kuitansi lunas tidak tampil lagi di daftar jatuh tempo.

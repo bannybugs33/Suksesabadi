@@ -145,7 +145,9 @@ class ArsipKuitansiTest extends TestCase
         $owner = User::factory()->create();
         foreach (range(1, 7) as $i) {
             $this->buatKuitansi($owner, [
-                'nama_pihak' => "Pelanggan {$i}", 'nomor_kuitansi' => "KWT-P-{$i}", 'tanggal_kuitansi' => '2026-09-0'.$i,
+                'nama_pihak' => "Pelanggan {$i}",
+                'nomor_kuitansi' => "KWT-P-{$i}",
+                'tanggal_kuitansi' => '2026-09-0'.$i,
             ]);
         }
 
@@ -194,11 +196,17 @@ class ArsipKuitansiTest extends TestCase
         Carbon::setTestNow(Carbon::parse('2026-09-29 09:00:00'));
         $owner = User::factory()->create();
         $kuitansi = $this->buatKuitansi($owner, [
-            'nama_pihak' => 'Warung Sama', 'nomor_kuitansi' => 'KWT-SAMA-1', 'status_pembayaran' => 'dp',
-            'nominal_transaksi' => 8750000, 'tanggal_jatuh_tempo' => '2026-10-03',
+            'nama_pihak' => 'Warung Sama',
+            'nomor_kuitansi' => 'KWT-SAMA-1',
+            'status_pembayaran' => 'dp',
+            'nominal_transaksi' => 8750000,
+            'tanggal_jatuh_tempo' => '2026-10-03',
         ]);
         $kuitansi->pembayaran()->create([
-            'nominal' => 5000000, 'tanggal_pembayaran' => '2026-09-10', 'metode_pembayaran' => 'Tunai', 'dicatat_oleh' => 'Andi',
+            'nominal' => 5000000,
+            'tanggal_pembayaran' => '2026-09-10',
+            'metode_pembayaran' => 'Tunai',
+            'dicatat_oleh' => 'Andi',
         ]);
 
         $daftar = $this->actingAs($owner)->get('/arsip-kuitansi?q=KWT-SAMA-1');
@@ -225,10 +233,15 @@ class ArsipKuitansiTest extends TestCase
         $owner = User::factory()->create();
         $this->buatKuitansi($owner, ['nama_pihak' => 'Telat Bayar', 'tanggal_jatuh_tempo' => '2026-09-26']);
         $lunas = $this->buatKuitansi($owner, [
-            'nama_pihak' => 'Sudah Selesai', 'status_pembayaran' => 'lunas', 'tanggal_jatuh_tempo' => '2026-09-26',
+            'nama_pihak' => 'Sudah Selesai',
+            'status_pembayaran' => 'lunas',
+            'tanggal_jatuh_tempo' => '2026-09-26',
         ]);
         $lunas->pembayaran()->create([
-            'nominal' => 1000000, 'tanggal_pembayaran' => '2026-09-20', 'metode_pembayaran' => 'Tunai', 'dicatat_oleh' => 'Andi',
+            'nominal' => 1000000,
+            'tanggal_pembayaran' => '2026-09-20',
+            'metode_pembayaran' => 'Tunai',
+            'dicatat_oleh' => 'Andi',
         ]);
 
         $response = $this->actingAs($owner)->get('/arsip-kuitansi');
@@ -247,6 +260,7 @@ class ArsipKuitansiTest extends TestCase
         $response->assertSee('href="'.route('kuitansi.create').'"', false);
         $response->assertSee('href="'.route('jatuh-tempo.index').'"', false);
         $response->assertSee('href="'.route('rekapitulasi.index').'"', false);
-        $this->assertMatchesRegularExpression('/aria-current="page"\s*>\s*Arsip\s*</', $response->getContent());
+        // Tab aktif kini berisi ikon SVG, lalu teks label di dalam <span>.
+        $this->assertMatchesRegularExpression('/aria-current="page"\s*>\s*<svg.*?<\/svg>\s*<span>Arsip<\/span>/s', $response->getContent());
     }
 }

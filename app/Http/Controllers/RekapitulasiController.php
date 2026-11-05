@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Pembayaran;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -13,64 +15,77 @@ class RekapitulasiController extends Controller
     {
         $filter = $request->validate([
             'periode' => ['nullable', 'date_format:Y-m'],
-            'jenis' => ['nullable', 'in:utang,piutang'],
-            'status' => ['nullable', 'in:belum_lunas,dp,cicilan,lunas'],
+            'arah' => ['nullable', 'in:penerimaan,pengeluaran'],
         ]);
 
-        $pembayaran = DB::table('pembayaran')
-            ->select('kuitansi_id')
-            ->selectRaw('SUM(nominal) AS total_terbayar')
-            ->groupBy('kuitansi_id');
-
         $userId = Auth::id() ?? 1;
+        $periode = $filter['periode'] ?? null;
+        $arah = $filter['arah'] ?? null;
 
-        $query = DB::table('kuitansi as k')
-            ->leftJoinSub($pembayaran, 'p', function ($join) {
-                $join->on('k.id', '=', 'p.kuitansi_id');
-            })
+        $dasar = DB::table('pembayaran as p')
+            ->join('kuitansi as k', 'k.id', '=', 'p.kuitansi_id')
             ->where('k.user_id', $userId)
-            ->select('k.*')
-            ->selectRaw('COALESCE(p.total_terbayar, 0) AS terbayar')
-            ->selectRaw(
-                'k.nominal_transaksi - COALESCE(p.total_terbayar, 0) AS sisa'
-            );
+            // Pembayaran dibatalkan tidak dihitung. Transaksi dibatalkan dengan uang dikembalikan
+            // juga tidak dihitung; bila uang tidak dikembalikan, uangnya memang sudah diterima/dibayar.
+            ->where('p.status', 'aktif')
+            ->whereRaw('(k.dibatalkan_pada IS NULL OR COALESCE(k.uang_dikembalikan, 0) = 0)');
 
-        if (! empty($filter['periode'])) {
-            [$tahun, $bulan] = explode('-', $filter['periode']);
+        // Pilihan periode: bulan yang memang memiliki pembayaran, terbaru lebih dulu.
+        $daftarPeriode = (clone $dasar)
+            ->pluck('p.tanggal_pembayaran')
+            ->map(fn ($tanggal) => Carbon::parse($tanggal)->format('Y-m'))
+            ->when($periode, fn ($bulan) => $bulan->push($periode))
+            ->unique()
+            ->sortDesc()
+            ->values()
+            ->mapWithKeys(fn (string $bulan) => [
+                $bulan => Carbon::createFromFormat('Y-m-d', $bulan.'-01')->translatedFormat('F Y'),
+            ]);
 
-            $query->whereYear('k.tanggal_kuitansi', $tahun)
-                ->whereMonth('k.tanggal_kuitansi', $bulan);
+        $query = (clone $dasar)
+            ->select([
+                'p.id', 'p.nominal', 'p.tanggal_pembayaran', 'p.metode_pembayaran',
+                'k.id as kuitansi_id', 'k.nomor_kuitansi', 'k.nama_pihak', 'k.jenis',
+            ]);
+
+        if ($periode) {
+            [$tahun, $bulan] = explode('-', $periode);
+
+            $query->whereYear('p.tanggal_pembayaran', $tahun)
+                ->whereMonth('p.tanggal_pembayaran', $bulan);
         }
 
-        if (! empty($filter['jenis'])) {
-            $query->where('k.jenis', $filter['jenis']);
+        if ($arah) {
+            $query->where('k.jenis', $arah === 'penerimaan' ? 'piutang' : 'utang');
         }
 
-        if (! empty($filter['status'])) {
-            $query->where('k.status_pembayaran', $filter['status']);
-        }
+        $pembayaran = $query
+            ->orderByDesc('p.tanggal_pembayaran')
+            ->orderByDesc('p.id')
+            ->get()
+            ->map(function ($baris) {
+                $baris->nominal = (float) $baris->nominal;
+                $baris->tanggal = Carbon::parse($baris->tanggal_pembayaran);
+                $baris->arah = $baris->jenis === 'piutang' ? 'penerimaan' : 'pengeluaran';
+                $baris->metode = Pembayaran::labelMetode($baris->metode_pembayaran);
 
-        $kuitansi = $query
-            ->orderByDesc('k.tanggal_kuitansi')
-            ->get();
+                return $baris;
+            });
 
-        $totalPiutang = $kuitansi
-            ->where('jenis', 'piutang')
-            ->sum('nominal_transaksi');
+        $totalPenerimaan = (float) $pembayaran->where('arah', 'penerimaan')->sum('nominal');
+        $totalPengeluaran = (float) $pembayaran->where('arah', 'pengeluaran')->sum('nominal');
 
-        $totalUtang = $kuitansi
-            ->where('jenis', 'utang')
-            ->sum('nominal_transaksi');
-
-        $totalTerbayar = $kuitansi->sum('terbayar');
-        $totalSisa = $kuitansi->sum('sisa');
-
-        return view('rekapitulasi.index', compact(
-            'kuitansi',
-            'totalPiutang',
-            'totalUtang',
-            'totalTerbayar',
-            'totalSisa'
-        ));
+        return view('rekapitulasi.index', [
+            'pembayaran' => $pembayaran,
+            'periode' => $periode,
+            'arah' => $arah,
+            'daftarPeriode' => $daftarPeriode,
+            'totalPenerimaan' => $totalPenerimaan,
+            'totalPengeluaran' => $totalPengeluaran,
+            'posisiBersih' => $totalPenerimaan - $totalPengeluaran,
+            'jumlahPembayaran' => $pembayaran->count(),
+            'dataPer' => Carbon::now(),
+            'adaFilter' => $periode !== null || $arah !== null,
+        ]);
     }
 }

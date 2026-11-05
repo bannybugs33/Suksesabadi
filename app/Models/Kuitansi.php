@@ -44,6 +44,8 @@ class Kuitansi extends Model
             'nominal_transaksi' => 'decimal:2',
             'tanggal_kuitansi' => 'date',
             'tanggal_jatuh_tempo' => 'date',
+            'dibatalkan_pada' => 'datetime',
+            'uang_dikembalikan' => 'boolean',
         ];
     }
 
@@ -52,9 +54,41 @@ class Kuitansi extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * Pembayaran yang berlaku (aktif). Semua hitungan terbayar dan sisa memakai relasi ini,
+     * jadi pembayaran yang dibatalkan otomatis tidak ikut dihitung.
+     */
     public function pembayaran(): HasMany
     {
-        return $this->hasMany(Pembayaran::class, 'kuitansi_id');
+        return $this->hasMany(Pembayaran::class, 'kuitansi_id')->where('status', 'aktif');
+    }
+
+    /**
+     * Seluruh pembayaran termasuk yang dibatalkan, urut kronologis. Untuk riwayat di halaman detail.
+     */
+    public function semuaPembayaran(): HasMany
+    {
+        return $this->hasMany(Pembayaran::class, 'kuitansi_id')
+            ->orderBy('tanggal_pembayaran')
+            ->orderBy('id');
+    }
+
+    public function koreksi(): HasMany
+    {
+        return $this->hasMany(KoreksiKuitansi::class, 'kuitansi_id')->orderByDesc('id');
+    }
+
+    public function sudahDibatalkan(): bool
+    {
+        return $this->dibatalkan_pada !== null;
+    }
+
+    /**
+     * Format rupiah seragam: Rp8.750.000.
+     */
+    public static function rupiah(mixed $angka): string
+    {
+        return 'Rp'.number_format((float) $angka, 0, ',', '.');
     }
 
     /**
@@ -216,7 +250,7 @@ class Kuitansi extends Model
     }
 
     /**
-     * Ringkasan pengingat jatuh tempo: kuitansi yang masih bersisa dan sudah lewat
+     * Ringkasan pengingat jatuh tempo: kuitansi yang masih bersisa, belum dibatalkan, dan sudah lewat
      * atau jatuh tempo dalam HARI_PENGINGAT (7) hari ke depan.
      * Jika $userId null, dihitung untuk seluruh toko (hanya angka agregat).
      *
@@ -229,6 +263,7 @@ class Kuitansi extends Model
 
         $items = static::query()
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
+            ->whereNull('dibatalkan_pada')
             ->whereNotNull('tanggal_jatuh_tempo')
             ->whereDate('tanggal_jatuh_tempo', '<=', $batas)
             ->withSum('pembayaran as total_terbayar', 'nominal')

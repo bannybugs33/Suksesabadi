@@ -17,8 +17,8 @@ class DashboardController extends Controller
      *
      * Semua angka dihitung dari data nyata (tabel kuitansi dan pembayaran), dengan aturan
      * yang sama seperti Arsip, Jatuh Tempo, dan Rekapitulasi:
-     *  - terbayar = jumlah pembayaran, sisa = nominal transaksi - terbayar;
-     *  - tagihan "aktif" = yang masih bersisa (sisa > 0);
+     *  - terbayar = jumlah pembayaran aktif, sisa = nominal transaksi - terbayar;
+     *  - tagihan "aktif" = yang masih bersisa (sisa > 0) dan belum dibatalkan;
      *  - pengingat = aktif dan terlambat atau jatuh tempo dalam 7 hari (Kuitansi::HARI_PENGINGAT).
      */
     public function index(Request $request): View
@@ -80,13 +80,15 @@ class DashboardController extends Controller
     }
 
     /**
-     * Seluruh kuitansi milik owner beserta total terbayar, sisa, dan kode tempo.
+     * Seluruh kuitansi milik owner (yang belum dibatalkan) beserta total terbayar, sisa, dan kode tempo.
+     * Hanya pembayaran berstatus aktif yang dihitung.
      *
      * @return Collection<int, object>
      */
     private function ambilKuitansi(int $userId, Carbon $tanggalAcuan): Collection
     {
         $pembayaran = DB::table('pembayaran')
+            ->where('status', 'aktif')
             ->select('kuitansi_id')
             ->selectRaw('SUM(nominal) AS total_terbayar')
             ->selectRaw('MAX(tanggal_pembayaran) AS terakhir_bayar')
@@ -97,6 +99,7 @@ class DashboardController extends Controller
                 $join->on('k.id', '=', 'p.kuitansi_id');
             })
             ->where('k.user_id', $userId)
+            ->whereNull('k.dibatalkan_pada')
             ->select('k.*')
             ->selectRaw('COALESCE(p.total_terbayar, 0) AS terbayar')
             ->selectRaw('ROUND(k.nominal_transaksi - COALESCE(p.total_terbayar, 0), 2) AS sisa')
@@ -152,6 +155,9 @@ class DashboardController extends Controller
      * Pembayaran 6 bulan terakhir, dipisah menjadi piutang masuk dan utang keluar,
      * berikut koordinat grafik garis (SVG 300x120). Diambil dari tanggal pembayaran.
      *
+     * Pembayaran yang dibatalkan tidak dihitung. Transaksi yang dibatalkan dengan uang
+     * dikembalikan penuh juga tidak dihitung; bila uang tidak dikembalikan, uangnya tetap dihitung.
+     *
      * @return array{bulan: array<int, array<string, mixed>>, path_piutang: string, path_utang: string}
      */
     private function buatGrafik(int $userId, Carbon $tanggalAcuan): array
@@ -162,6 +168,8 @@ class DashboardController extends Controller
         $perBulan = DB::table('pembayaran as p')
             ->join('kuitansi as k', 'k.id', '=', 'p.kuitansi_id')
             ->where('k.user_id', $userId)
+            ->where('p.status', 'aktif')
+            ->whereRaw('(k.dibatalkan_pada IS NULL OR COALESCE(k.uang_dikembalikan, 0) = 0)')
             ->whereDate('p.tanggal_pembayaran', '>=', $awal->toDateString())
             ->get(['p.nominal', 'p.tanggal_pembayaran', 'k.jenis'])
             ->groupBy(fn ($row) => Carbon::parse($row->tanggal_pembayaran)->format('Y-m'));
@@ -213,7 +221,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * Jumlah kuitansi per status pembayaran (semua kuitansi, sama dengan filter status di Arsip).
+     * Jumlah kuitansi per status pembayaran (kuitansi yang belum dibatalkan, sama dengan filter status di Arsip).
      *
      * @return array<string, array<string, mixed>>
      */
@@ -244,7 +252,8 @@ class DashboardController extends Controller
     }
 
     /**
-     * Aktivitas terbaru: pembayaran dicatat, kuitansi baru, dan kuitansi lunas.
+     * Aktivitas terbaru: pembayaran dicatat dan kuitansi baru.
+     * Pembayaran dibatalkan dan kuitansi dibatalkan tidak ditampilkan.
      *
      * @return array<int, array<string, string>>
      */
@@ -256,6 +265,8 @@ class DashboardController extends Controller
         $pembayaranTerbaru = DB::table('pembayaran as p')
             ->join('kuitansi as k', 'k.id', '=', 'p.kuitansi_id')
             ->where('k.user_id', $userId)
+            ->where('p.status', 'aktif')
+            ->whereNull('k.dibatalkan_pada')
             ->orderByDesc('p.tanggal_pembayaran')
             ->orderByDesc('p.id')
             ->limit(5)

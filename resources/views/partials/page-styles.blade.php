@@ -62,6 +62,8 @@
     .badge.dp { background: var(--warn-bg); color: var(--warn-ink); }
     .badge.cicilan { background: #e4e9fb; color: #2f4aa8; }
     .badge.lunas { background: #dff3e8; color: #1f6b44; }
+    .badge.dibatalkan { background: #e8e7e3; color: #6b6b86; text-decoration: line-through; }
+    .badge.aktif { background: #dff3e8; color: #1f6b44; }
 
     .kosong { padding: 34px 12px; text-align: center; font-size: 13px; font-weight: 500; color: var(--muted); }
     .kosong b { display: block; margin-bottom: 4px; font-size: 14px; font-weight: 800; color: var(--ink); }

@@ -31,6 +31,10 @@ Route::middleware(['auth', CegahCacheHalamanPrivat::class])->group(function () {
     Route::get('/arsip-kuitansi', [ArsipKuitansiController::class, 'index'])->name('arsip-kuitansi.index');
     Route::get('/arsip-kuitansi/{kuitansi}', [ArsipKuitansiController::class, 'show'])->name('arsip-kuitansi.show');
     Route::get('/arsip-kuitansi/{kuitansi}/bukti', [ArsipKuitansiController::class, 'bukti'])->name('arsip-kuitansi.bukti');
+    Route::put('/arsip-kuitansi/{kuitansi}', [ArsipKuitansiController::class, 'update'])->name('arsip-kuitansi.update');
+    Route::post('/arsip-kuitansi/{kuitansi}/batalkan', [ArsipKuitansiController::class, 'batalkan'])->name('arsip-kuitansi.batalkan');
+    Route::put('/arsip-kuitansi/{kuitansi}/pembayaran/{pembayaran}', [ArsipKuitansiController::class, 'updatePembayaran'])->name('arsip-kuitansi.pembayaran.update');
+    Route::post('/arsip-kuitansi/{kuitansi}/pembayaran/{pembayaran}/batalkan', [ArsipKuitansiController::class, 'batalkanPembayaran'])->name('arsip-kuitansi.pembayaran.batalkan');
     Route::get('/kuitansi/baru', [KuitansiController::class, 'create'])->name('kuitansi.create');
     Route::post('/kuitansi/baru', [KuitansiController::class, 'store'])->name('kuitansi.store');
     Route::get('/kuitansi/nomor-sementara', [KuitansiController::class, 'nomorSementara'])->name('kuitansi.nomor-sementara');

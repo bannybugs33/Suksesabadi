@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Kuitansi;
+use App\Models\Pembayaran;
 use App\Models\User;
 use Carbon\Carbon;
 use Database\Seeders\DatabaseSeeder;
@@ -62,18 +63,26 @@ class KeterhubunganFiturTest extends TestCase
         // 3. Sisa Rp650.000 harus sama di semua fitur.
         $this->actingAs($owner)->get('/dashboard')->assertSee('Rp650.000');
         $this->actingAs($owner)->get('/jatuh-tempo?selected='.$kuitansi->id)->assertSee('Rp650.000');
-        $this->actingAs($owner)->get('/rekapitulasi')->assertSee('Rp650.000');
+        $this->actingAs($owner)->get('/rekapitulasi')->assertSee('Rp350.000');
         $this->actingAs($owner)->get(route('arsip-kuitansi.show', $kuitansi))->assertSee('Rp650.000');
     }
 
-    public function test_dashboard_remaining_total_matches_rekapitulasi_total(): void
+    public function test_dashboard_paid_total_matches_rekapitulasi_posisi_bersih_inputs(): void
     {
         $this->seed(DatabaseSeeder::class);
         $owner = User::query()->first();
 
-        // Sisa piutang + sisa utang di Dashboard = "Belum dibayar" di Rekapitulasi (tanpa filter).
-        $this->actingAs($owner)->get('/dashboard')->assertSee('Rp20.850.000');
-        $this->actingAs($owner)->get('/rekapitulasi')->assertSee('Rp20.850.000');
+        // Total terbayar di Dashboard harus sama dengan penerimaan + pengeluaran di Rekapitulasi (tanpa filter).
+        $terbayar = (float) Pembayaran::query()->sum('nominal');
+        $rp = 'Rp'.number_format($terbayar, 0, ',', '.');
+
+        $this->actingAs($owner)->get('/dashboard')->assertSee($rp);
+
+        $penerimaan = (float) Pembayaran::query()
+            ->whereHas('kuitansi', fn ($q) => $q->where('jenis', 'piutang'))->sum('nominal');
+        $this->actingAs($owner)->get('/rekapitulasi')
+            ->assertSeeInOrder(['Total penerimaan', 'Rp'.number_format($penerimaan, 0, ',', '.')])
+            ->assertSeeInOrder(['Jumlah pembayaran', (string) Pembayaran::query()->count()]);
     }
 
     public function test_paid_off_invoice_leaves_dashboard_and_jatuh_tempo_but_stays_in_arsip_history(): void

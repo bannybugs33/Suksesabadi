@@ -86,6 +86,7 @@
                     @foreach (\App\Models\Kuitansi::LABEL_STATUS as $nilai => $label)
                         <option value="{{ $nilai }}" @selected(request('status') === $nilai)>{{ $label }}</option>
                     @endforeach
+                    <option value="dibatalkan" @selected(request('status') === 'dibatalkan')>Dibatalkan</option>
                 </select>
             </div>
             <a href="{{ route('arsip-kuitansi.index') }}" class="btn-soft">Hapus filter</a>
@@ -136,7 +137,13 @@
                                     </td>
                                     <td class="angka">{{ $item->tanggal_kuitansi->translatedFormat('d M Y') }}</td>
                                     <td><span class="badge {{ $item->jenis }}">{{ $item->jenis === 'piutang' ? 'Piutang' : 'Utang' }}</span></td>
-                                    <td><span class="badge {{ $item->status_pembayaran }}">{{ \App\Models\Kuitansi::labelStatus($item->status_pembayaran) }}</span></td>
+                                    <td>
+                                        @if ($item->dibatalkan_pada)
+                                            <span class="badge dibatalkan">Dibatalkan</span>
+                                        @else
+                                            <span class="badge {{ $item->status_pembayaran }}">{{ \App\Models\Kuitansi::labelStatus($item->status_pembayaran) }}</span>
+                                        @endif
+                                    </td>
                                     <td class="angka tempo">
                                         {{ $item->tanggal_jatuh_tempo?->translatedFormat('d M Y') ?? '-' }}
                                         @if ($item->tempo_teks)

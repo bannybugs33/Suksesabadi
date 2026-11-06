@@ -3,15 +3,77 @@
 namespace App\Http\Controllers;
 
 use App\Models\Pembayaran;
+use App\Services\RekapitulasiPdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class RekapitulasiController extends Controller
 {
+    private const NAMA_TOKO = 'Toko Sukses Abadi';
+
     public function index(Request $request): View
+    {
+        return view('rekapitulasi.index', $this->ambilData($request));
+    }
+
+    /**
+     * Unduh rekapitulasi sebagai PDF, dengan filter periode dan arah yang sama seperti halaman.
+     */
+    public function pdf(Request $request): Response
+    {
+        $data = $this->ambilData($request);
+
+        $labelPeriode = $data['periode']
+            ? Carbon::createFromFormat('Y-m-d', $data['periode'].'-01')->translatedFormat('F Y')
+            : 'Semua periode';
+
+        $labelArah = match ($data['arah']) {
+            'penerimaan' => 'Penerimaan',
+            'pengeluaran' => 'Pengeluaran',
+            default => 'Semua arah',
+        };
+
+        $dokumen = new RekapitulasiPdf(
+            self::NAMA_TOKO,
+            "Periode: {$labelPeriode} | Arah: {$labelArah}",
+            'Dicetak '.$data['dataPer']->translatedFormat('d M Y, H.i').' oleh '.(Auth::user()->name ?? 'Owner'),
+        );
+
+        $baris = $data['pembayaran']->map(fn (object $b): array => [
+            'tanggal' => $b->tanggal->translatedFormat('d M Y'),
+            'nama' => (string) $b->nama_pihak,
+            'nomor' => (string) $b->nomor_kuitansi,
+            'arah' => $b->arah === 'penerimaan' ? 'Penerimaan' : 'Pengeluaran',
+            'metode' => (string) $b->metode,
+            'nominal' => (float) $b->nominal,
+        ]);
+
+        $isi = $dokumen->render([
+            'penerimaan' => $data['totalPenerimaan'],
+            'pengeluaran' => $data['totalPengeluaran'],
+            'bersih' => $data['posisiBersih'],
+            'jumlah' => $data['jumlahPembayaran'],
+        ], $baris);
+
+        $namaBerkas = 'rekapitulasi_'.($data['periode'] ?? 'semua-periode').'_'.($data['arah'] ?? 'semua-arah').'.pdf';
+
+        return response($isi, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$namaBerkas.'"',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    /**
+     * Data rekapitulasi yang dipakai halaman dan PDF, supaya angkanya selalu sama.
+     *
+     * @return array<string, mixed>
+     */
+    private function ambilData(Request $request): array
     {
         $filter = $request->validate([
             'periode' => ['nullable', 'date_format:Y-m'],
@@ -75,7 +137,7 @@ class RekapitulasiController extends Controller
         $totalPenerimaan = (float) $pembayaran->where('arah', 'penerimaan')->sum('nominal');
         $totalPengeluaran = (float) $pembayaran->where('arah', 'pengeluaran')->sum('nominal');
 
-        return view('rekapitulasi.index', [
+        return [
             'pembayaran' => $pembayaran,
             'periode' => $periode,
             'arah' => $arah,
@@ -86,6 +148,6 @@ class RekapitulasiController extends Controller
             'jumlahPembayaran' => $pembayaran->count(),
             'dataPer' => Carbon::now(),
             'adaFilter' => $periode !== null || $arah !== null,
-        ]);
+        ];
     }
 }

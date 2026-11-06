@@ -40,4 +40,5 @@ Route::middleware(['auth', CegahCacheHalamanPrivat::class])->group(function () {
     Route::get('/kuitansi/nomor-sementara', [KuitansiController::class, 'nomorSementara'])->name('kuitansi.nomor-sementara');
     Route::post('/kuitansi/cek-duplikat', [KuitansiController::class, 'cekDuplikat'])->name('kuitansi.cek-duplikat');
     Route::get('/rekapitulasi', [RekapitulasiController::class, 'index'])->name('rekapitulasi.index');
+    Route::get('/rekapitulasi/pdf', [RekapitulasiController::class, 'pdf'])->name('rekapitulasi.pdf');
 });
